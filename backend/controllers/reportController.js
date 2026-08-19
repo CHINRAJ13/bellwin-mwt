@@ -995,7 +995,11 @@ const getCashAssetsReport = async (req, res, next) => {
 
     const paymentQ = Object.keys(dateQuery).length > 0 ? { paymentDate: dateQuery } : {};
     const incomeQ = Object.keys(dateQuery).length > 0 ? { incomeDate: dateQuery } : {};
-    const expenseQ = Object.keys(dateQuery).length > 0 ? { expenseDate: dateQuery } : {};
+    const expenseQ = {
+      status: 'Approved',
+      ...(Object.keys(dateQuery).length > 0 ? { expenseDate: dateQuery } : {})
+    };
+
 
     const [payments, incomes, expenses] = await Promise.all([
       Payment.find(paymentQ),
@@ -1142,7 +1146,10 @@ const getBusinessReport = async (req, res, next) => {
     const topupQ = Object.keys(dateQuery).length > 0 ? { topupDate: dateQuery } : {};
     const repledgeQ = Object.keys(dateQuery).length > 0 ? { repledgeDate: dateQuery } : {};
     const incomeQ = Object.keys(dateQuery).length > 0 ? { incomeDate: dateQuery } : {};
-    const expenseQ = Object.keys(dateQuery).length > 0 ? { expenseDate: dateQuery } : {};
+    const expenseQ = {
+      status: 'Approved',
+      ...(Object.keys(dateQuery).length > 0 ? { expenseDate: dateQuery } : {})
+    };
     const customerQ = Object.keys(dateQuery).length > 0 ? { createdAt: dateQuery } : {};
 
     const [
@@ -1244,7 +1251,7 @@ const getDailyClosingSummary = async (req, res, next) => {
       Payment.aggregate([{ $match: { paymentDate: { $lt: startOfPeriod } } }, { $group: { _id: null, total: { $sum: { $toDouble: "$paymentAmount" } } } }]),
       Remittance.aggregate([{ $match: { remittanceDate: { $lt: startOfPeriod }, type: 'Received' } }, { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }]),
       // Outflows
-      Expense.aggregate([{ $match: { expenseDate: { $lt: startOfPeriod } } }, { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }]),
+      Expense.aggregate([{ $match: { expenseDate: { $lt: startOfPeriod }, status: 'Approved' } }, { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }]),
       Loan.aggregate([{ $match: { loanDate: { $lt: startOfPeriod } } }, { $group: { _id: null, total: { $sum: { $toDouble: "$loanAmount" } } } }]),
       TopUp.aggregate([{ $match: { topupDate: { $lt: startOfPeriod } } }, { $group: { _id: null, total: { $sum: { $toDouble: "$topupAmount" } } } }]),
       Repledge.aggregate([{ $match: { repledgeDate: { $lt: startOfPeriod } } }, { $group: { _id: null, total: { $sum: { $toDouble: "$additionalLoanAmount" } } } }]),
@@ -1256,7 +1263,7 @@ const getDailyClosingSummary = async (req, res, next) => {
     // 2. PERIOD'S TRANSACTIONS
     const [incomes, expenses, payments, denominations, goldStocks, remittances] = await Promise.all([
       Income.find({ incomeDate: { $gte: startOfPeriod, $lte: endOfPeriod } }),
-      Expense.find({ expenseDate: { $gte: startOfPeriod, $lte: endOfPeriod } }),
+      Expense.find({ expenseDate: { $gte: startOfPeriod, $lte: endOfPeriod }, status: 'Approved' }),
       Payment.find({ paymentDate: { $gte: startOfPeriod, $lte: endOfPeriod } }),
       Denomination.find({ entryDate: { $gte: startOfPeriod, $lte: endOfPeriod } }),
       Loan.find({ loanDate: { $gte: startOfPeriod, $lte: endOfPeriod } }).populate('customerId'),

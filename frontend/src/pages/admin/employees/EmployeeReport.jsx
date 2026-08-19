@@ -5,7 +5,7 @@ import {
   Download, Printer, Search, Calendar, Users, RefreshCw, 
   FileText, Loader2, ArrowLeft, Briefcase, CalendarDays, 
   BadgeIndianRupee, Building, MessageSquare, ClipboardCheck,
-  LogIn, LogOut
+  LogIn, LogOut, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { exportTableToPDF, exportToExcel, handlePrint } from '../../../utils/exportUtils';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -18,6 +18,9 @@ const EmployeeReport = () => {
   const [employees, setEmployees] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const [leaveDatesRecords, setLeaveDatesRecords] = useState({});
+  const [customers, setCustomers] = useState([]);
+  const [loans, setLoans] = useState([]);
+  const [expandedEmp, setExpandedEmp] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
@@ -35,8 +38,8 @@ const EmployeeReport = () => {
       const token = localStorage.getItem('token');
       const selectedMonth = selectedDate.substring(0, 7); // YYYY-MM
       
-      // Parallel fetch for all employees & attendance list of the month to maximize loading speed
-      const [empRes, attRes] = await Promise.all([
+      // Parallel fetch for all employees, attendance list, customers, and loans to maximize loading speed
+      const [empRes, attRes, custRes, loanRes] = await Promise.all([
         api.get('/employees', {
           headers: { Authorization: `Bearer ${token}` },
           params: {
@@ -44,15 +47,36 @@ const EmployeeReport = () => {
             search: search || undefined,
             branch: branchFilter || undefined
           }
+        }).catch(err => {
+          console.error("Failed to fetch employees", err);
+          return { data: { employees: [] } };
         }),
         api.get('/attendance', {
           headers: { Authorization: `Bearer ${token}` },
           params: { month: selectedMonth }
+        }).catch(err => {
+          console.error("Failed to fetch attendance", err);
+          return { data: { records: [] } };
+        }),
+        api.get('/customers', {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { limit: 100000 }
+        }).catch(err => {
+          console.error("Failed to fetch customers", err);
+          return { data: { data: [] } };
+        }),
+        api.get('/loans', {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(err => {
+          console.error("Failed to fetch loans", err);
+          return { data: [] };
         })
       ]);
 
       const empList = Array.isArray(empRes.data) ? empRes.data : empRes.data.employees || [];
       const attList = attRes.data.records || [];
+      const custList = custRes.data?.data || [];
+      const loanList = Array.isArray(loanRes.data) ? loanRes.data : [];
       
       // Group attendance by employeeId and Date
       const attMap = {};
@@ -79,6 +103,8 @@ const EmployeeReport = () => {
       setEmployees(empList);
       setAttendanceRecords(attMap);
       setLeaveDatesRecords(leaveMap);
+      setCustomers(custList);
+      setLoans(loanList);
 
     } catch (err) {
       console.error('Error fetching employee report:', err);
@@ -86,6 +112,13 @@ const EmployeeReport = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleExpand = (empId) => {
+    setExpandedEmp(prev => ({
+      ...prev,
+      [empId]: !prev[empId]
+    }));
   };
 
   // Helper to get status styling
@@ -112,7 +145,8 @@ const EmployeeReport = () => {
       { label: 'Check-In', key: 'checkIn' },
       { label: 'Check-Out', key: 'checkOut' },
       { label: 'Leave Dates (Month)', key: 'monthlyLeaves' },
-      { label: 'Remark', key: 'remark' }
+      { label: 'Remark', key: 'remark' },
+      { label: 'Assigned Customers & Loans', key: 'customersAndLoans' }
     ];
 
     const dataToExport = employees.map(emp => {
@@ -122,6 +156,22 @@ const EmployeeReport = () => {
       const formattedLeaves = leaves
         .map(d => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }))
         .join(', ');
+
+      const empCustomers = customers.filter(c => {
+        const byUsername = c.createdBy?.username && emp.username && c.createdBy.username.toLowerCase() === emp.username.toLowerCase();
+        const byEmployeeId = c.employeeId && emp._id && (c.employeeId === emp._id || c.employeeId.toString() === emp._id.toString());
+        const byCreatedBy = c.createdBy && emp._id && (c.createdBy === emp._id || c.createdBy.toString() === emp._id.toString());
+        return byUsername || byEmployeeId || byCreatedBy;
+      });
+      const custAndLoansText = empCustomers.map(c => {
+        const custLoans = loans.filter(l => 
+          l.customerId === c.customerId || 
+          l.customerObjectId === c._id || 
+          l.customerObjectId?._id === c._id
+        );
+        const loansStr = custLoans.map(l => `${l.loanId} (${l.loanType || 'Gold Loan'} - ₹${l.loanAmount} - ${l.status})`).join('; ') || 'No Loans';
+        return `${c.customerName} (${c.customerId}): [${loansStr}]`;
+      }).join(' | ') || 'None';
 
       return {
         employeeId: emp.employeeId,
@@ -133,7 +183,8 @@ const EmployeeReport = () => {
         checkIn: att.checkIn || '—',
         checkOut: att.checkOut || '—',
         monthlyLeaves: formattedLeaves || 'None',
-        remark: att.note || emp.remark || ''
+        remark: att.note || emp.remark || '',
+        customersAndLoans: custAndLoansText
       };
     });
 
@@ -148,7 +199,8 @@ const EmployeeReport = () => {
       { label: 'Attendance', key: 'attendance' },
       { label: 'Check-In', key: 'checkIn' },
       { label: 'Check-Out', key: 'checkOut' },
-      { label: 'Leave Dates', key: 'monthlyLeaves' }
+      { label: 'Leave Dates', key: 'monthlyLeaves' },
+      { label: 'Customers & Loans', key: 'customersAndLoans' }
     ];
 
     const dataToExport = employees.map(emp => {
@@ -159,6 +211,22 @@ const EmployeeReport = () => {
         .map(d => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }))
         .join(', ');
 
+      const empCustomers = customers.filter(c => {
+        const byUsername = c.createdBy?.username && emp.username && c.createdBy.username.toLowerCase() === emp.username.toLowerCase();
+        const byEmployeeId = c.employeeId && emp._id && (c.employeeId === emp._id || c.employeeId.toString() === emp._id.toString());
+        const byCreatedBy = c.createdBy && emp._id && (c.createdBy === emp._id || c.createdBy.toString() === emp._id.toString());
+        return byUsername || byEmployeeId || byCreatedBy;
+      });
+      const custAndLoansText = empCustomers.map(c => {
+        const custLoans = loans.filter(l => 
+          l.customerId === c.customerId || 
+          l.customerObjectId === c._id || 
+          l.customerObjectId?._id === c._id
+        );
+        const loansStr = custLoans.map(l => `${l.loanId} (₹${l.loanAmount})`).join('; ') || 'No Loans';
+        return `${c.customerName}: [${loansStr}]`;
+      }).join(' | ') || 'None';
+
       return {
         employeeId: emp.employeeId,
         name: `${emp.firstName} ${emp.lastName}`,
@@ -166,7 +234,8 @@ const EmployeeReport = () => {
         attendance: att.status || 'Not Marked',
         checkIn: att.checkIn || '—',
         checkOut: att.checkOut || '—',
-        monthlyLeaves: formattedLeaves || 'None'
+        monthlyLeaves: formattedLeaves || 'None',
+        customersAndLoans: custAndLoansText
       };
     });
 
@@ -260,6 +329,24 @@ const EmployeeReport = () => {
               year: 'numeric'
             });
 
+            const empCustomers = customers.filter(c => {
+              const byUsername = c.createdBy?.username && emp.username && c.createdBy.username.toLowerCase() === emp.username.toLowerCase();
+              const byEmployeeId = c.employeeId && emp._id && (c.employeeId === emp._id || c.employeeId.toString() === emp._id.toString());
+              const byCreatedBy = c.createdBy && emp._id && (c.createdBy === emp._id || c.createdBy.toString() === emp._id.toString());
+              return byUsername || byEmployeeId || byCreatedBy;
+            });
+            const isExpanded = !!expandedEmp[emp._id];
+
+            // Calculate total loans count for this employee
+            const empLoansCount = empCustomers.reduce((acc, c) => {
+              const custLoans = loans.filter(l => 
+                l.customerId === c.customerId || 
+                l.customerObjectId === c._id || 
+                l.customerObjectId?._id === c._id
+              );
+              return acc + custLoans.length;
+            }, 0);
+
             return (
               <div 
                 key={emp._id}
@@ -330,6 +417,16 @@ const EmployeeReport = () => {
                     </span>
                   </div>
 
+                  {/* Customer & Loan Summary */}
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100">
+                    <span className="text-green-700 flex items-center gap-1.5 font-bold">
+                      <Users size={14} className="text-green-600" /> Customers & Loans
+                    </span>
+                    <span className="font-extrabold text-gray-900">
+                      {empCustomers.length} Cust / {empLoansCount} {empLoansCount === 1 ? 'Loan' : 'Loans'}
+                    </span>
+                  </div>
+
                   {/* Attendance status */}
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100">
                     <span className="text-gray-500 flex items-center gap-1.5 font-medium">
@@ -374,6 +471,80 @@ const EmployeeReport = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Collapsible Customers & Loans Section */}
+                <div className="border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(emp._id)}
+                    className="w-full px-5 py-3 flex items-center justify-between text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Users size={14} className="text-gray-400" />
+                      Assigned Customers ({empCustomers.length})
+                    </span>
+                    {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="px-5 pb-5 max-h-60 overflow-y-auto space-y-3 bg-gray-50/70 border-t border-gray-100/50 pt-3">
+                      {empCustomers.length === 0 ? (
+                        <div className="text-center py-2 text-xs text-gray-400 italic">
+                          No customers assigned.
+                        </div>
+                      ) : (
+                        empCustomers.map(cust => {
+                          const custLoans = loans.filter(l => 
+                            l.customerId === cust.customerId || 
+                            l.customerObjectId === cust._id || 
+                            l.customerObjectId?._id === cust._id
+                          );
+                          
+                          return (
+                            <div key={cust._id} className="bg-white border border-gray-200 p-3 shadow-2xs rounded-none space-y-2">
+                              <div className="flex justify-between items-start text-[11px]">
+                                <div>
+                                  <div className="font-bold text-gray-800">{cust.customerName}</div>
+                                  <div className="text-gray-500 font-mono text-[10px]">{cust.customerId}</div>
+                                </div>
+                                <span className={`px-1.5 py-0.5 text-[9px] font-bold ${cust.status === 'Approved' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'}`}>
+                                  {cust.status}
+                                </span>
+                              </div>
+                              
+                              {/* Loans nested */}
+                              <div className="pl-2 border-l-2 border-green-500/30 space-y-1">
+                                {custLoans.length === 0 ? (
+                                  <div className="text-[10px] text-gray-400 italic">No loans issued</div>
+                                ) : (
+                                  custLoans.map(l => (
+                                    <div key={l._id} className="flex justify-between items-center text-[10px] text-gray-700 bg-gray-50/50 px-2 py-1 border border-gray-100">
+                                      <div>
+                                        <span className="font-semibold text-gray-800">{l.loanId}</span>
+                                        <span className="text-gray-400 mx-1">|</span>
+                                        <span className="text-gray-500 text-[9px]">{l.loanType || 'Gold Loan'}</span>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className="font-bold text-gray-900">₹{Number(l.loanAmount || 0).toLocaleString('en-IN')}</span>
+                                        <span className={`ml-1.5 px-1 text-[8px] font-bold rounded-xs ${
+                                          l.status === 'Closed' ? 'bg-gray-100 text-gray-600' :
+                                          l.status === 'Approved' || l.status === 'Active' ? 'bg-green-100 text-green-700' :
+                                          'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                          {l.status}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Remark Footer */}

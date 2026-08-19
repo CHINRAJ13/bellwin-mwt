@@ -18,7 +18,7 @@ const AddExpense = () => {
   const isEdit = !!id;
   const [formData, setFormData] = useState({
     expenseId: '',
-    expenseDate: '',
+    expenseDate: new Date().toLocaleDateString('sv-SE'),
 
     expenseCategory: '',
     expenseSubCategory: '',
@@ -129,7 +129,9 @@ const AddExpense = () => {
         } else {
         // Reset form
         setFormData({
-          expenseId: '', expenseDate: '', expenseCategory: '',
+          expenseId: '',
+          expenseDate: new Date().toLocaleDateString('sv-SE'),
+          expenseCategory: '',
           expenseSubCategory: '', expenseAmount: '', paymentMode: '', paidToVendorName: '',
           description: '', billInvoiceNo: '', billReceiptUpload: '', approvedBy: '',
           enteredBy: '', gstIncluded: false, taxAmount: '', paymentReferenceNo: ''
