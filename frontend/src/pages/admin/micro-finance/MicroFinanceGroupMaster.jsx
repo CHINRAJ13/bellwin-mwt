@@ -5,6 +5,9 @@ import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 
 const MicroFinanceGroupMaster = () => {
+  const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+  const userBranch = user.role === 'admin' ? 'Head Office' : (user.employee?.branch || 'Main Branch');
+
   const [searchId, setSearchId] = useState('');
   const [searchName, setSearchName] = useState('');
   const [customer, setCustomer] = useState(null);
@@ -131,10 +134,12 @@ const MicroFinanceGroupMaster = () => {
               <Input label="Group Name" placeholder="Enter Group Name" required />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">Branch</label>
-                <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
-                  <option value="">Select Branch</option>
-                  <option value="main">Main Branch</option>
-                  <option value="sub">Sub Branch 1</option>
+                <select 
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-gray-500 cursor-not-allowed"
+                  value={userBranch}
+                  disabled
+                >
+                  <option value={userBranch}>{userBranch}</option>
                 </select>
               </div>
               <Input label="Max Members Limit" type="number" placeholder="e.g. 5 or 10" defaultValue="5" required />
