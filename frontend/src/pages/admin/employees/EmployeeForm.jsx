@@ -40,6 +40,7 @@ const EmployeeForm = () => {
     joiningDate: new Date().toISOString().split('T')[0],
     status: 'Active', username: '', password: '', confirmPassword: '',
     photo: '', signatureUrl: '', employeeId: '',
+    salary: '', remark: '',
   };
 
   const [formData, setFormData] = useState(() => {
@@ -375,6 +376,8 @@ const EmployeeForm = () => {
                     <option value="Inactive">Inactive</option>
                     <option value="Terminated">Terminated</option>
                   </Select>
+                  <Input label="Salary (₹)" type="number" name="salary" value={formData.salary || ''} onChange={handleChange} placeholder="e.g. 25000" />
+                  <Input label="Remark" name="remark" value={formData.remark || ''} onChange={handleChange} placeholder="e.g. Good performance" />
                 </div>
               </div>
 

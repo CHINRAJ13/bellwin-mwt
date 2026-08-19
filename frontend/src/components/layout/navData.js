@@ -40,6 +40,7 @@ export const ADMIN_NAV = [
       { label: 'Attendance Management', icon: UserCheck, path: '/admin/attendance' },
       { label: 'Salary Management', icon: Calculator, path: '/admin/salary' },
       { label: 'Live Tracking', icon: MapPin, path: '/admin/employees/live-tracking' },
+      { label: 'Employee Report', icon: ClipboardCheck, path: '/admin/employees/report' },
     ]
   },
   {
