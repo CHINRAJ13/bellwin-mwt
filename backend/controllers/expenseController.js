@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const ApiError = require('../utils/ApiError');
 const Expense = require('../models/Expense');
 const { cloudinary, deleteFromCloudinary } = require('../config/cloudinary');
@@ -54,7 +55,7 @@ const createExpense = async (req, res, next) => {
       return next(new ApiError(400, 'Expense amount must be greater than 0' ));
     }
 
-    const expenseExists = await Expense.findOne({ expenseId });
+    const expenseExists = await Expense.findOne({ expenseId: { $regex: new RegExp(`^${expenseId}$`, 'i') } });
     if (expenseExists) {
       return res.status(400).json({ message: `Expense ID ${expenseId} already exists` });
     }
@@ -98,15 +99,12 @@ const getExpenses = async (req, res, next) => {
 const getExpenseById = async (req, res, next) => {
   try {
     const { expenseId } = req.params;
-    // console.log(`[Search Flow] Request received for Expense ID: ${expenseId}`);
     
-    const expense = await Expense.findOne({ expenseId });
+    const expense = await Expense.findOne({ expenseId: { $regex: new RegExp(`^${expenseId}$`, 'i') } });
     if (!expense) {
-      // console.log(`[Search Flow] Expense ${expenseId} not found`);
       return next(new ApiError(404, 'Expense not found' ));
     }
     
-    // console.log(`[Search Flow] Expense found! Returning data...`);
     res.json(expense);
   } catch (error) { next(error); }
 };
@@ -123,7 +121,7 @@ const updateExpense = async (req, res, next) => {
     delete updateData.expenseId;
     delete updateData.createdAt;
 
-    const existingExpense = await Expense.findOne({ expenseId: id });
+    const existingExpense = await Expense.findOne({ expenseId: { $regex: new RegExp(`^${id}$`, 'i') } });
     if (!existingExpense) {
       return next(new ApiError(404, 'Expense not found' ));
     }
@@ -153,7 +151,7 @@ const updateExpense = async (req, res, next) => {
     }
 
     const updatedExpense = await Expense.findOneAndUpdate(
-      { expenseId: id }, 
+      { expenseId: { $regex: new RegExp(`^${id}$`, 'i') } }, 
       updateData, 
       { returnDocument: 'after' }
     );
@@ -162,7 +160,6 @@ const updateExpense = async (req, res, next) => {
       return next(new ApiError(404, 'Expense not found' ));
     }
 
-    // console.log(`[Update Flow] Expense ${id} updated successfully`);
     res.json(updatedExpense);
   } catch (error) { next(error); }
 };
@@ -173,7 +170,7 @@ const updateExpense = async (req, res, next) => {
 const deleteExpense = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deletedExpense = await Expense.findOneAndDelete({ expenseId: id });
+    const deletedExpense = await Expense.findOneAndDelete({ expenseId: { $regex: new RegExp(`^${id}$`, 'i') } });
 
     if (!deletedExpense) {
       return next(new ApiError(404, 'Expense not found' ));
@@ -250,7 +247,18 @@ const approveExpense = async (req, res, next) => {
       return next(new ApiError(400, 'Invalid status update'));
     }
 
-    const expense = await Expense.findOne({ expenseId: id });
+    let expense;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      expense = await Expense.findOne({ 
+        $or: [
+          { _id: id },
+          { expenseId: { $regex: new RegExp(`^${id}$`, 'i') } }
+        ] 
+      });
+    } else {
+      expense = await Expense.findOne({ expenseId: { $regex: new RegExp(`^${id}$`, 'i') } });
+    }
+
     if (!expense) {
       return next(new ApiError(404, 'Expense not found'));
     }
