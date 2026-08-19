@@ -9,6 +9,25 @@ const ExpenseReport = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+  const role = user.role || 'employee';
+  const isAdmin = role === 'admin' || role === 'super admin' || role === 'Super Admin';
+
+  const handleUpdateStatus = async (expenseId, status) => {
+    if (window.confirm(`Are you sure you want to set status of ${expenseId} to ${status}?`)) {
+      try {
+        const response = await api.put(`/expenses/status/${expenseId}`, { status });
+        if (response.data.success) {
+          toast.success(`Expense ${status.toLowerCase()} successfully!`);
+          fetchExpenses();
+        }
+      } catch (error) {
+        console.error(`Error updating expense status to ${status}:`, error);
+        toast.error(error.response?.data?.message || `Failed to update status to ${status}`);
+      }
+    }
+  };
+
   // Filter States
   const [datePreset, setDatePreset] = useState('All Time');
   const [startDate, setStartDate] = useState('');
@@ -143,6 +162,8 @@ const ExpenseReport = () => {
     const categoryTotals = {};
 
     filteredExpenses.forEach(exp => {
+      const status = exp.status || 'Approved';
+      if (status !== 'Approved') return;
       const amount = exp.expenseAmount || 0;
       total += amount;
 
@@ -181,7 +202,7 @@ const ExpenseReport = () => {
       exp.paymentMode || '',
       exp.enteredBy || '',
       exp.approvedBy || '',
-      'Paid'
+      exp.status || 'Pending'
     ];
     exportToExcel(filteredExpenses, headers, mapper, `Expense_Report_${new Date().toISOString().split('T')[0]}`);
   };
@@ -197,7 +218,7 @@ const ExpenseReport = () => {
       exp.expenseAmount || 0,
       exp.paymentMode || '',
       exp.enteredBy || '',
-      'Paid'
+      exp.status || 'Pending'
     ];
     exportTableToPDF(filteredExpenses, headers, mapper, 'Expense Report', `Expense_Report_${new Date().toISOString().split('T')[0]}`);
   };
@@ -357,6 +378,7 @@ const ExpenseReport = () => {
                 <th className="px-4 py-3 font-semibold">Mode</th>
                 <th className="px-4 py-3 font-semibold">By</th>
                 <th className="px-4 py-3 font-semibold text-right">Amount (₹)</th>
+                <th className="px-4 py-3 font-semibold text-center">Status</th>
                 <th className="px-4 py-3 font-semibold text-center print:hidden">Action</th>
               </tr>
             </thead>
@@ -391,14 +413,36 @@ const ExpenseReport = () => {
                     <td className="px-4 py-3 font-bold text-gray-900 text-right">
                       {exp.expenseAmount ? exp.expenseAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full font-medium ${
+                        exp.status === 'Approved' ? 'bg-green-100 text-green-800' :
+                        exp.status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {exp.status || 'Pending'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-center print:hidden">
                       <div className="flex items-center justify-center gap-3">
-                        <NavLink to={`/admin/expense/edit/${exp.expenseId}`} className="text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1 text-xs font-medium" title="Edit Expense">
-                          <Edit size={14} /> Edit
-                        </NavLink>
-                        <button type="button" onClick={() => handleDelete(exp.expenseId)} className="text-red-600 hover:text-red-800 flex items-center justify-center gap-1 text-xs font-medium cursor-pointer" title="Delete Expense">
-                          <Trash2 size={14} /> Delete
-                        </button>
+                        {(!exp.status || exp.status === 'Pending') ? (
+                          <>
+                            <NavLink to={`/admin/expense/edit/${exp.expenseId}`} className="text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1 text-xs font-medium" title="Edit Expense">
+                              <Edit size={14} /> Edit
+                            </NavLink>
+                            <button type="button" onClick={() => handleDelete(exp.expenseId)} className="text-red-600 hover:text-red-800 flex items-center justify-center gap-1 text-xs font-medium cursor-pointer" title="Delete Expense">
+                              <Trash2 size={14} /> Delete
+                            </button>
+                            {isAdmin && (
+                              <>
+                                <button type="button" onClick={() => handleUpdateStatus(exp.expenseId, 'Approved')} className="text-green-600 hover:text-green-800 flex items-center justify-center gap-1 text-xs font-semibold cursor-pointer" title="Approve Expense">
+                                  Approve
+                                </button>
+                                <button type="button" onClick={() => handleUpdateStatus(exp.expenseId, 'Rejected')} className="text-red-600 hover:text-red-800 flex items-center justify-center gap-1 text-xs font-semibold cursor-pointer" title="Reject Expense">
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                          </>
+                        ) : null}
                         {(exp.expenseImage || exp.billReceiptUpload) && (
                           <a href={exp.expenseImage || `http://localhost:5000/${exp.billReceiptUpload}`} target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-800 flex items-center justify-center gap-1 text-xs font-medium" title="View Bill/Item Image">
                             <FileText size={14} /> Bill
@@ -420,7 +464,7 @@ const ExpenseReport = () => {
             {filteredExpenses.length > 0 && (
               <tfoot className="bg-gray-50 border-t-2 border-gray-200 print:border-black">
                 <tr>
-                  <td colSpan="7" className="px-4 py-4 text-right font-bold text-gray-800 uppercase tracking-wider">Filtered Total:</td>
+                  <td colSpan="8" className="px-4 py-4 text-right font-bold text-gray-800 uppercase tracking-wider">Filtered Total:</td>
                   <td className="px-4 py-4 text-right font-bold text-erp-green text-lg print:text-black">
                     ₹{summary.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>

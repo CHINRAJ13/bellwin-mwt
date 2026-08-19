@@ -70,7 +70,7 @@ const LoanRequestReport = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 animate-fade-in">
       <PageHeader 
-        title="Loan Request Report" 
+        title="Customer Loan Request" 
         subtitle="Report of all loan requests submitted via agent app." 
         icon={FileText} 
         actions={
@@ -102,7 +102,7 @@ const LoanRequestReport = () => {
                 { label: 'Quantity', key: 'quantity' },
                 { label: 'Status', key: 'status' }
               ];
-              exportTableToPDF('Agent Loan Requests Report', headers, data, 'Agent_Loan_Requests');
+              exportTableToPDF('Customer Loan Request', headers, data, 'Agent_Loan_Requests');
             }}>Export PDF</Button>
           </div>
         }
