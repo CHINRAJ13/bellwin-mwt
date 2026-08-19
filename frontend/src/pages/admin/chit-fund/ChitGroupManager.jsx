@@ -6,13 +6,17 @@ import toast from 'react-hot-toast';
 import api from '../../../services/api';
 
 const ChitGroupManager = () => {
+    const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+    const isAdmin = user.role === 'admin' || user.role === 'super admin' || user.role === 'Super Admin';
+    const userBranch = isAdmin ? 'Head Office' : (user.employee?.branch || '');
+
     const [groups, setGroups] = useState([]);
     const [branches, setBranches] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         groupName: '', chitValue: '', duration: 10, totalMembers: '', monthlyContribution: '',
-        startDate: '', endDate: '', branch: '', employee: '', commissionPercentage: 4,
+        startDate: '', endDate: '', branch: userBranch, employee: '', commissionPercentage: 4,
         joiningFee: 100, documentMaintenanceFeePerLakh: 500, chitMethod: 'Draw'
     });
 
@@ -31,8 +35,9 @@ const ChitGroupManager = () => {
 
     const fetchEmployees = async () => {
         try {
-            const res = await api.get('/employees');
-            if (res.data.success) setEmployees(res.data.data);
+            const res = await api.get('/employees?limit=1000');
+            const empList = res.data.employees || res.data.data || res.data || [];
+            setEmployees(empList);
         } catch (error) { console.error('Failed to fetch employees', error); }
     };
 
@@ -96,13 +101,24 @@ const ChitGroupManager = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">Branch</label>
-                                    <BranchSelect name="branch" value={formData.branch} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-[#193F4A]/20 outline-none transition-all" required />
+                                    <BranchSelect 
+                                        name="branch" 
+                                        value={formData.branch} 
+                                        onChange={handleInputChange} 
+                                        label={null} 
+                                        className={`w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-[#193F4A]/20 outline-none transition-all ${!isAdmin ? 'bg-gray-50 cursor-not-allowed text-gray-500' : 'bg-white'}`} 
+                                        disabled={!isAdmin} 
+                                        required 
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">Collection Agent / Employee</label>
                                     <select name="employee" value={formData.employee} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-[#193F4A]/20 outline-none transition-all">
                                         <option value="">Select Employee (Optional)</option>
-                                        {employees.map(e => <option key={e._id} value={e._id}>{e.name} ({e.employeeId})</option>)}
+                                        {employees
+                                            .filter(e => e.branch && formData.branch && e.branch.trim().toLowerCase() === formData.branch.trim().toLowerCase())
+                                            .map(e => <option key={e._id} value={e._id}>{e.name || `${e.firstName} ${e.lastName}`} ({e.employeeId || e._id})</option>)
+                                        }
                                     </select>
                                 </div>
 
