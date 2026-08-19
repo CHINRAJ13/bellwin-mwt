@@ -8,12 +8,29 @@ const MicroFinanceManager = ({ showAddForm, setShowAddForm }) => {
   const [formData, setFormData] = useState({
     schemeName: '',
     interestRate: '',
-    amountLimit: '',
-    maturePeriodMonths: '',
-    documentCharges: '',
-    penalty: '',
     schemeType: 'Micro Finance',
-    status: 'Active'
+    status: 'Active',
+    
+    // New MFI Fields
+    mfiType: 'Individual Loan',
+    minLoanAmount: '',
+    maxLoanAmount: '',
+    loanAmountBasis: 'Per Member',
+    interestCalculationMethod: 'Flat',
+    penaltyType: 'Fixed Amount',
+    penaltyValue: '',
+    penaltyCalculation: 'Per Overdue Installment',
+    gracePeriodDays: '',
+    tenureUnit: 'Months',
+    minTenure: '',
+    maxTenure: '',
+    repaymentFrequency: 'Weekly',
+    processingFeeType: 'Fixed Amount',
+    processingFeeValue: '',
+    insuranceFee: '',
+    documentationFee: '',
+    minGroupMembers: '',
+    maxGroupMembers: ''
   });
 
   const fetchSchemes = async () => {
@@ -38,15 +55,52 @@ const MicroFinanceManager = ({ showAddForm, setShowAddForm }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Frontend Validations
+    if (Number(formData.minLoanAmount) > Number(formData.maxLoanAmount)) {
+      toast.error("Minimum Loan Amount cannot be greater than Maximum Loan Amount");
+      return;
+    }
+    if (Number(formData.minTenure) > Number(formData.maxTenure)) {
+      toast.error("Minimum Tenure cannot be greater than Maximum Tenure");
+      return;
+    }
+    if (formData.mfiType === 'Group Loan') {
+      if (Number(formData.minGroupMembers) > Number(formData.maxGroupMembers)) {
+        toast.error("Minimum Group Members cannot be greater than Maximum Group Members");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const response = await api.post('/schemes', formData);
       if (response.status === 201 || response.status === 200) {
         toast.success(`Micro Finance Scheme added successfully!`);
         setFormData({
-          schemeName: '', interestRate: '', amountLimit: '',
-          maturePeriodMonths: '', documentCharges: '', penalty: '', 
-          schemeType: 'Micro Finance', status: 'Active'
+          schemeName: '',
+          interestRate: '',
+          schemeType: 'Micro Finance',
+          status: 'Active',
+          mfiType: 'Individual Loan',
+          minLoanAmount: '',
+          maxLoanAmount: '',
+          loanAmountBasis: 'Per Member',
+          interestCalculationMethod: 'Flat',
+          penaltyType: 'Fixed Amount',
+          penaltyValue: '',
+          penaltyCalculation: 'Per Overdue Installment',
+          gracePeriodDays: '',
+          tenureUnit: 'Months',
+          minTenure: '',
+          maxTenure: '',
+          repaymentFrequency: 'Weekly',
+          processingFeeType: 'Fixed Amount',
+          processingFeeValue: '',
+          insuranceFee: '',
+          documentationFee: '',
+          minGroupMembers: '',
+          maxGroupMembers: ''
         });
         setShowAddForm(false);
         fetchSchemes();
@@ -82,9 +136,6 @@ const MicroFinanceManager = ({ showAddForm, setShowAddForm }) => {
       if (s.schemeId && s.schemeId.startsWith('MF-')) {
         const num = parseInt(s.schemeId.split('-')[1]);
         if (!isNaN(num) && num > maxNum) maxNum = num;
-      } else if (s.schemeId && s.schemeId.startsWith('GL-')) {
-        const num = parseInt(s.schemeId.split('-')[1]);
-        if (!isNaN(num) && num > maxNum) maxNum = num;
       }
     });
     return `MF-${String(maxNum + 1).padStart(3, '0')}`;
@@ -95,40 +146,177 @@ const MicroFinanceManager = ({ showAddForm, setShowAddForm }) => {
   return (
     <>
       {showAddForm && (
-        <div className="mb-6 animate-fade-in">
+        <div className="mb-6 bg-white p-6 border border-gray-200 rounded-xl shadow-sm animate-fade-in">
           <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">New Micro Finance Scheme</h3>
-          <form onSubmit={handleSubmit} className="grid grid-cols-4 gap-5 form-spiritual-bg">
-            <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Scheme ID</label>
-              <input readOnly type="text" value={nextSchemeId} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed font-semibold focus:outline-none" />
-            </div>
-            <div className="col-span-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Scheme Name *</label>
-              <input required type="text" name="schemeName" value={formData.schemeName} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green transition-colors" placeholder="e.g. Daily Collection Scheme" />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Section 1: Basic Scheme Setup */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Interest % *</label>
-              <input required type="number" step="any" name="interestRate" value={formData.interestRate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green transition-colors" />
+              <h4 className="text-sm font-semibold text-green-700 uppercase tracking-wider mb-3 border-l-4 border-green-500 pl-2">1. Scheme Master</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Scheme ID</label>
+                  <input readOnly type="text" value={nextSchemeId} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed font-semibold focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Scheme Name *</label>
+                  <input required type="text" name="schemeName" value={formData.schemeName} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green" placeholder="e.g. Weekly Group Loan" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Scheme Type *</label>
+                  <select name="mfiType" value={formData.mfiType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green focus:border-erp-green">
+                    <option value="Individual Loan">Individual Loan</option>
+                    <option value="Group Loan">Group Loan</option>
+                  </select>
+                </div>
+              </div>
             </div>
+
+            {/* Section 2: Loan Amount Setup */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Amount Limit (Rs) *</label>
-              <input required type="number" step="any" name="amountLimit" value={formData.amountLimit} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green transition-colors" />
+              <h4 className="text-sm font-semibold text-green-700 uppercase tracking-wider mb-3 border-l-4 border-green-500 pl-2">2. Loan Amount Setup</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Minimum Loan Amount * (₹)</label>
+                  <input required type="number" min="0" name="minLoanAmount" value={formData.minLoanAmount} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 10000" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Maximum Loan Amount * (₹)</label>
+                  <input required type="number" min="0" name="maxLoanAmount" value={formData.maxLoanAmount} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 50000" />
+                </div>
+                {formData.mfiType === 'Group Loan' && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Loan Amount Basis *</label>
+                    <select name="loanAmountBasis" value={formData.loanAmountBasis} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                      <option value="Per Member">Per Member</option>
+                      <option value="Per Group">Per Group</option>
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Section 3: Interest & Penalty Setup */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mature Period (Months) *</label>
-              <input required type="number" name="maturePeriodMonths" value={formData.maturePeriodMonths} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green transition-colors" />
+              <h4 className="text-sm font-semibold text-green-700 uppercase tracking-wider mb-3 border-l-4 border-green-500 pl-2">3. Interest & Penalty Setup</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Interest Rate * (%)</label>
+                  <input required type="number" step="any" min="0" name="interestRate" value={formData.interestRate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 24" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Calculation Method *</label>
+                  <select name="interestCalculationMethod" value={formData.interestCalculationMethod} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                    <option value="Flat">Flat</option>
+                    <option value="Reducing Balance">Reducing Balance</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Penalty Type *</label>
+                  <select name="penaltyType" value={formData.penaltyType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                    <option value="Fixed Amount">Fixed Amount</option>
+                    <option value="Percentage">Percentage</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Penalty Value * ({formData.penaltyType === 'Fixed Amount' ? '₹' : '%'})
+                  </label>
+                  <input required type="number" step="any" min="0" name="penaltyValue" value={formData.penaltyValue} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder={formData.penaltyType === 'Fixed Amount' ? "50" : "2"} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Penalty Calculation *</label>
+                  <select name="penaltyCalculation" value={formData.penaltyCalculation} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                    <option value="Per Overdue Installment">Per Overdue Installment</option>
+                    <option value="Per Overdue Day">Per Overdue Day</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Grace Period (Days)</label>
+                  <input type="number" min="0" name="gracePeriodDays" value={formData.gracePeriodDays} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 1" />
+                </div>
+              </div>
             </div>
+
+            {/* Section 4: Tenure Setup */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Document Charges *</label>
-              <input required type="number" step="any" name="documentCharges" value={formData.documentCharges} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green transition-colors" />
+              <h4 className="text-sm font-semibold text-green-700 uppercase tracking-wider mb-3 border-l-4 border-green-500 pl-2">4. Loan Tenure Setup</h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Tenure Unit *</label>
+                  <select name="tenureUnit" value={formData.tenureUnit} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                    <option value="Days">Days</option>
+                    <option value="Months">Months</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Minimum Tenure * ({formData.tenureUnit})</label>
+                  <input required type="number" min="1" name="minTenure" value={formData.minTenure} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Maximum Tenure * ({formData.tenureUnit})</label>
+                  <input required type="number" min="1" name="maxTenure" value={formData.maxTenure} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Repayment Frequency *</label>
+                  <select name="repaymentFrequency" value={formData.repaymentFrequency} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                    <option value="Daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Bi-Weekly">Bi-Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                  </select>
+                </div>
+              </div>
             </div>
+
+            {/* Section 5: Processing Fee & Charges */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Penalty % *</label>
-              <input required type="number" step="any" name="penalty" value={formData.penalty} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green focus:border-erp-green transition-colors" />
+              <h4 className="text-sm font-semibold text-green-700 uppercase tracking-wider mb-3 border-l-4 border-green-500 pl-2">5. Processing Fee & Charges</h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Processing Fee Type *</label>
+                  <select name="processingFeeType" value={formData.processingFeeType} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-erp-green">
+                    <option value="Fixed Amount">Fixed Amount</option>
+                    <option value="Percentage">Percentage</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Processing Fee * ({formData.processingFeeType === 'Fixed Amount' ? '₹' : '%'})
+                  </label>
+                  <input required type="number" step="any" min="0" name="processingFeeValue" value={formData.processingFeeValue} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 500" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Insurance Fee (₹)</label>
+                  <input type="number" min="0" name="insuranceFee" value={formData.insuranceFee} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 200" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Documentation Fee (₹)</label>
+                  <input type="number" min="0" name="documentationFee" value={formData.documentationFee} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 100" />
+                </div>
+              </div>
             </div>
-            <div className="col-span-1 flex justify-end items-end pb-1">
-              <button disabled={loading} type="submit" className="px-6 py-1.5 text-[15px] bg-erp-green text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm inline-flex items-center justify-center gap-1.5 disabled:opacity-50 w-auto tracking-wide">
-                {loading ? 'Saving...' : 'Submit / Save'}
+
+            {/* Section 6: Conditional Group Member Setup */}
+            {formData.mfiType === 'Group Loan' && (
+              <div>
+                <h4 className="text-sm font-semibold text-green-700 uppercase tracking-wider mb-3 border-l-4 border-green-500 pl-2">6. Group Member Setup</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Minimum Group Members *</label>
+                    <input required type="number" min="1" name="minGroupMembers" value={formData.minGroupMembers} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 5" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Maximum Group Members *</label>
+                    <input required type="number" min="1" name="maxGroupMembers" value={formData.maxGroupMembers} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-erp-green" placeholder="e.g. 20" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-4 border-t pt-4">
+              <button disabled={loading} type="submit" className="px-6 py-2 bg-erp-green text-white font-bold rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50 tracking-wide">
+                {loading ? 'Saving...' : 'Save Scheme Configuration'}
               </button>
             </div>
           </form>
@@ -143,32 +331,77 @@ const MicroFinanceManager = ({ showAddForm, setShowAddForm }) => {
               <tr>
                 <th className="p-3 text-xs font-bold uppercase tracking-wider">Scheme ID</th>
                 <th className="p-3 text-xs font-bold uppercase tracking-wider">Scheme Name</th>
-                <th className="p-3 text-xs font-bold uppercase tracking-wider">Interest %</th>
-                <th className="p-3 text-xs font-bold uppercase tracking-wider">Amount Rs</th>
-                <th className="p-3 text-xs font-bold uppercase tracking-wider">Mature Period</th>
-                <th className="p-3 text-xs font-bold uppercase tracking-wider">Doc Charges</th>
-                <th className="p-3 text-xs font-bold uppercase tracking-wider">Penalty %</th>
+                <th className="p-3 text-xs font-bold uppercase tracking-wider">MFI Type</th>
+                <th className="p-3 text-xs font-bold uppercase tracking-wider">Amount Range</th>
+                <th className="p-3 text-xs font-bold uppercase tracking-wider">Interest Rate</th>
+                <th className="p-3 text-xs font-bold uppercase tracking-wider">Tenure / Frequency</th>
+                <th className="p-3 text-xs font-bold uppercase tracking-wider">Fees (Proc/Ins/Doc)</th>
+                <th className="p-3 text-xs font-bold uppercase tracking-wider">Penalty Setup</th>
                 <th className="p-3 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {schemes.map((s) => (
-                <tr key={s._id} className="bg-white hover:bg-gray-50 transition-colors text-gray-800">
-                  <td className="p-3 text-sm font-semibold">{s.schemeId}</td>
-                  <td className="p-3 text-sm font-medium">{s.schemeName}</td>
-                  <td className="p-3 text-sm">{s.interestRate}%</td>
-                  <td className="p-3 text-sm font-medium">₹{s.amountLimit != null ? Number(s.amountLimit).toFixed(2) : ''}</td>
-                  <td className="p-3 text-sm">{s.maturePeriodMonths} mo</td>
-                  <td className="p-3 text-sm">₹{s.documentCharges}</td>
-                  <td className="p-3 text-sm text-red-600">{s.penalty}%</td>
-                  <td className="p-3 text-sm text-right">
-                    <button onClick={() => handleDelete(s._id)} className="text-red-500 hover:text-red-700 font-bold px-3 py-1 bg-red-50 rounded-md">Delete</button>
-                  </td>
-                </tr>
-              ))}
+              {schemes.map((s) => {
+                const limitAmountMin = s.minLoanAmount != null ? s.minLoanAmount : 0;
+                const limitAmountMax = s.maxLoanAmount != null ? s.maxLoanAmount : (s.amountLimit || 0);
+                const tenureMinVal = s.minTenure != null ? s.minTenure : 1;
+                const tenureMaxVal = s.maxTenure != null ? s.maxTenure : (s.maturePeriodMonths || 0);
+                const tUnit = s.tenureUnit || 'Months';
+                
+                const procVal = s.processingFeeValue != null ? s.processingFeeValue : 0;
+                const procType = s.processingFeeType || 'Fixed Amount';
+                const insuranceFeeVal = s.insuranceFee != null ? s.insuranceFee : 0;
+                const docFeeVal = s.documentationFee != null ? s.documentationFee : (s.documentCharges || 0);
+
+                const penType = s.penaltyType || 'Percentage';
+                const penVal = s.penaltyValue != null ? s.penaltyValue : (s.penalty || 0);
+                const penCalc = s.penaltyCalculation || 'Per Overdue Installment';
+                const graceDays = s.gracePeriodDays != null ? s.gracePeriodDays : 0;
+
+                return (
+                  <tr key={s._id} className="bg-white hover:bg-gray-50 transition-colors text-gray-800">
+                    <td className="p-3 text-sm font-semibold">{s.schemeId}</td>
+                    <td className="p-3 text-sm font-medium">{s.schemeName}</td>
+                    <td className="p-3 text-sm">
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${s.mfiType === 'Group Loan' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                        {s.mfiType || 'Individual Loan'}
+                      </span>
+                      {s.mfiType === 'Group Loan' && (
+                        <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                          Basis: {s.loanAmountBasis || 'Per Member'} | Min: {s.minGroupMembers || 0} - Max: {s.maxGroupMembers || 0}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-3 text-sm font-semibold text-gray-900">
+                      ₹{limitAmountMin.toLocaleString('en-IN')} - ₹{limitAmountMax.toLocaleString('en-IN')}
+                    </td>
+                    <td className="p-3 text-sm">
+                      <div className="font-semibold text-gray-800">{s.interestRate}%</div>
+                      <div className="text-[10px] text-gray-400">{s.interestCalculationMethod || 'Flat'}</div>
+                    </td>
+                    <td className="p-3 text-sm">
+                      <div className="font-medium">{tenureMinVal} - {tenureMaxVal} {tUnit}</div>
+                      <div className="text-[11px] text-green-600 font-bold">{s.repaymentFrequency || 'Weekly'}</div>
+                    </td>
+                    <td className="p-3 text-sm text-gray-600">
+                      <div className="text-[11px]">Proc: <span className="font-semibold">{procType === 'Percentage' ? `${procVal}%` : `₹${procVal}`}</span></div>
+                      <div className="text-[11px]">Ins: <span className="font-semibold">₹{insuranceFeeVal}</span></div>
+                      <div className="text-[11px]">Doc: <span className="font-semibold">₹{docFeeVal}</span></div>
+                    </td>
+                    <td className="p-3 text-sm text-red-600">
+                      <div className="font-bold">{penType === 'Percentage' ? `${penVal}%` : `₹${penVal}`}</div>
+                      <div className="text-[10px] text-gray-400">{penCalc}</div>
+                      {graceDays > 0 && <div className="text-[9px] text-gray-500 font-mono">Grace: {graceDays} Day(s)</div>}
+                    </td>
+                    <td className="p-3 text-sm text-right">
+                      <button onClick={() => handleDelete(s._id)} className="text-red-500 hover:text-red-700 font-bold px-3 py-1 bg-red-50 rounded-md">Delete</button>
+                    </td>
+                  </tr>
+                );
+              })}
               {schemes.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="p-8 text-center text-gray-500">No Micro Finance Schemes found. Use the form above to add one.</td>
+                  <td colSpan="9" className="p-8 text-center text-gray-500">No Micro Finance Schemes found. Use the form above to add one.</td>
                 </tr>
               )}
             </tbody>

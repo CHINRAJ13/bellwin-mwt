@@ -28,6 +28,9 @@ const employeeSchema = new mongoose.Schema({
         type: String,
         default: 'Active'
     },
+    remark: {
+        type: String
+    },
 
     // Login credentials
     username: { type: String },

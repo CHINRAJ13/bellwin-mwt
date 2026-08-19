@@ -16,6 +16,7 @@ import Attendance from './pages/admin/employees/Attendance';
 import SalaryManagement from './pages/admin/employees/SalaryManagement';
 import PromotionDemotion from './pages/admin/employees/PromotionDemotion';
 import LiveTracking from './pages/admin/employees/LiveTracking';
+import EmployeeReport from './pages/admin/employees/EmployeeReport';
 import RolesPermissions from './pages/admin/RolesPermissions';
 import AdminCustomerApprovalPending from './pages/admin/CustomerApprovalPending';
 import LoanCalculator from './pages/admin/loan-config/LoanCalculator';
@@ -265,6 +266,7 @@ const App = () => {
           <Route path="/admin/employees/icard" element={<ComingSoon />} />
           <Route path="/admin/employees/promotion" element={<PromotionDemotion />} />
           <Route path="/admin/employees/live-tracking" element={<LiveTracking />} />
+          <Route path="/admin/employees/report" element={<EmployeeReport />} />
 
           {/* Profile & Settings (Placeholders for dropdown links) */}
           <Route path="/admin/profile" element={<ComingSoon />} />
