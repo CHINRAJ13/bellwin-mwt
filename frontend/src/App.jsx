@@ -109,6 +109,7 @@ import MfiAccountLedger from './pages/admin/reports/MfiAccountLedger';
 // Expense Pages
 import AddExpense from './pages/admin/Expensive/AddExpense';
 import ExpenseReport from './pages/admin/Expensive/ExpenseReport';
+import ExpenseApproval from './pages/admin/Expensive/ExpenseApproval';
 import AssetMaster from './pages/admin/AssetMaster';
 
 // Employee Pages
@@ -297,6 +298,7 @@ const App = () => {
           <Route path="/admin/expense/add" element={<AddExpense />} />
           <Route path="/admin/expense/edit/:id" element={<AddExpense />} />
           <Route path="/admin/expense/report" element={<ExpenseReport />} />
+          <Route path="/admin/approval/expense" element={<ExpenseApproval />} />
           <Route path="/admin/assets" element={<AssetMaster />} />
 
           {/* Micro Finance Routes */}

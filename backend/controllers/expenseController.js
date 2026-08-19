@@ -78,29 +78,6 @@ const createExpense = async (req, res, next) => {
       expenseImagePublicId: expenseImagePublicId
     });
 
-    // --- LEDGER POSTING START ---
-    const { postLedgerEntry } = require('../services/ledgerService');
-    const voucherInfo = {
-        voucherNumber: `PV${Math.floor(100000 + Math.random() * 900000)}`,
-        voucherType: 'Payment',
-        referenceModule: 'Expense',
-        referenceId: expense.expenseId || String(expense._id),
-        remarks: `Expense: ${expenseCategory} - ${description || ''}`,
-        createdBy: req.user ? req.user._id : null
-    };
-
-    try {
-        const cashOrBank = (paymentMode && paymentMode.toLowerCase() !== 'cash') ? 'Bank' : 'Cash';
-        
-        // Debit Expense Ledger
-        await postLedgerEntry(expenseCategory, expenseAmount, 'Debit', voucherInfo);
-        // Credit Cash/Bank
-        await postLedgerEntry(cashOrBank, expenseAmount, 'Credit', voucherInfo);
-    } catch(err) {
-        console.error("Expense Ledger posting failed:", err);
-    }
-    // --- LEDGER POSTING END ---
-
     res.status(201).json(expense);
   } catch (error) { next(error); }
 };
@@ -261,6 +238,60 @@ const getExpenseReport = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+// @desc    Approve/Reject expense request
+// @route   PUT /api/expenses/status/:id
+// @access  Private
+const approveExpense = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'Approved' or 'Rejected'
+
+    if (!['Approved', 'Rejected'].includes(status)) {
+      return next(new ApiError(400, 'Invalid status update'));
+    }
+
+    const expense = await Expense.findOne({ expenseId: id });
+    if (!expense) {
+      return next(new ApiError(404, 'Expense not found'));
+    }
+
+    if (expense.status !== 'Pending') {
+      return res.status(400).json({ success: false, message: `Expense is already ${expense.status}` });
+    }
+
+    expense.status = status;
+    expense.approvedBy = req.user ? (req.user.name || req.user.username) : 'Admin';
+
+    if (status === 'Approved') {
+      // --- LEDGER POSTING START ---
+      const { postLedgerEntry } = require('../services/ledgerService');
+      const voucherInfo = {
+          voucherNumber: `PV${Math.floor(100000 + Math.random() * 900000)}`,
+          voucherType: 'Payment',
+          referenceModule: 'Expense',
+          referenceId: expense.expenseId || String(expense._id),
+          remarks: `Expense: ${expense.expenseCategory} - ${expense.description || ''}`,
+          createdBy: req.user ? req.user._id : null
+      };
+
+      try {
+          const cashOrBank = (expense.paymentMode && expense.paymentMode.toLowerCase() !== 'cash') ? 'Bank' : 'Cash';
+          
+          // Debit Expense Ledger
+          await postLedgerEntry(expense.expenseCategory, expense.expenseAmount, 'Debit', voucherInfo);
+          // Credit Cash/Bank
+          await postLedgerEntry(cashOrBank, expense.expenseAmount, 'Credit', voucherInfo);
+      } catch(err) {
+          console.error("Expense Ledger posting failed:", err);
+      }
+      // --- LEDGER POSTING END ---
+    }
+
+    await expense.save();
+    res.json({ success: true, message: `Expense request ${status.toLowerCase()} successfully`, data: expense });
+  } catch (error) { next(error); }
+};
+
 module.exports = {
   getNextExpenseId,
   createExpense,
@@ -268,5 +299,6 @@ module.exports = {
   getExpenseById,
   updateExpense,
   deleteExpense,
-  getExpenseReport
+  getExpenseReport,
+  approveExpense
 };

@@ -88,7 +88,7 @@ const LoanRequisitionReport = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 animate-fade-in">
       <PageHeader 
-        title="Loan Application Report" 
+        title="Loan Application" 
         subtitle="Report of all loan applications." 
         icon={FileText} 
         actions={
@@ -114,7 +114,7 @@ const LoanRequisitionReport = () => {
                 { label: 'Requested Amount', key: 'loanAmount' },
                 { label: 'Status', key: 'status' }
               ];
-              exportTableToPDF('Loan Application Report', headers, data, 'Loan_Applications');
+              exportTableToPDF('Loan Application', headers, data, 'Loan_Applications');
             }}>Export PDF</Button>
           </div>
         }

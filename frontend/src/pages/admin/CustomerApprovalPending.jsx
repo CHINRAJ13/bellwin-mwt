@@ -92,7 +92,7 @@ const CustomerApprovalPending = () => {
                 <div className="bg-white rounded-none p-6 shadow-sm border border-slate-200/60">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Customer Approval</h1>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Customer Profile</h1>
                             <p className="text-slate-500 text-sm mt-1">Review and approve pending customer registrations</p>
                         </div>
                         <div className="flex items-center gap-3 w-full md:w-auto">

@@ -7,6 +7,26 @@ import Button from '../../../components/ui/Button';
 const MicroFinanceScheme = () => {
   const [activeTab, setActiveTab] = useState('scheme');
   const [schemeCode, setSchemeCode] = useState(`MFI-${Math.floor(100000 + Math.random() * 900000)}`);
+  const [minTenurePeriod, setMinTenurePeriod] = useState('');
+  const [maxTenurePeriod, setMaxTenurePeriod] = useState('');
+  const [frequency, setFrequency] = useState('weekly');
+
+  const getDaysMultiplier = (freq) => {
+    if (freq === 'weekly') return 7;
+    if (freq === 'biweekly') return 14;
+    if (freq === 'monthly') return 30;
+    return 1;
+  };
+
+  const getPeriodLabel = (freq) => {
+    if (freq === 'weekly') return 'Weeks';
+    if (freq === 'biweekly') return 'Bi-Weeks';
+    if (freq === 'monthly') return 'Months';
+    return 'Periods';
+  };
+
+  const minDays = minTenurePeriod ? parseInt(minTenurePeriod) * getDaysMultiplier(frequency) : 0;
+  const maxDays = maxTenurePeriod ? parseInt(maxTenurePeriod) * getDaysMultiplier(frequency) : 0;
 
   const tabs = [
     { id: 'scheme', label: 'Scheme Master', icon: Settings },
@@ -67,13 +87,6 @@ const MicroFinanceScheme = () => {
                   <option value="group">Group Loan (JLG)</option>
                 </select>
               </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Status</label>
-                <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline">Cancel</Button>
@@ -107,16 +120,49 @@ const MicroFinanceScheme = () => {
           <div className="space-y-6 animate-fade-in">
             <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Loan Tenure Setup</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Minimum Tenure (Months)" type="number" placeholder="Min Months" required />
-              <Input label="Maximum Tenure (Months)" type="number" placeholder="Max Months" required />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">Repayment Frequency</label>
-                <select className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+                <select 
+                  value={frequency}
+                  onChange={e => setFrequency(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                >
                   <option value="weekly">Weekly</option>
                   <option value="biweekly">Bi-Weekly</option>
                   <option value="monthly">Monthly</option>
                 </select>
               </div>
+              <div className="hidden md:block"></div> {/* layout spacer */}
+              <Input 
+                label={`Minimum Tenure (${getPeriodLabel(frequency)})`} 
+                type="number" 
+                placeholder={`Min ${getPeriodLabel(frequency)}`} 
+                value={minTenurePeriod}
+                onChange={e => setMinTenurePeriod(e.target.value)}
+                required 
+              />
+              <Input 
+                label={`Maximum Tenure (${getPeriodLabel(frequency)})`} 
+                type="number" 
+                placeholder={`Max ${getPeriodLabel(frequency)}`} 
+                value={maxTenurePeriod}
+                onChange={e => setMaxTenurePeriod(e.target.value)}
+                required 
+              />
+              <Input 
+                label="Minimum Tenure (Days)" 
+                type="number" 
+                value={minDays || ''} 
+                readOnly 
+                className="bg-gray-100 cursor-not-allowed font-semibold"
+              />
+              <Input 
+                label="Maximum Tenure (Days)" 
+                type="number" 
+                value={maxDays || ''} 
+                readOnly 
+                className="bg-gray-100 cursor-not-allowed font-semibold"
+              />
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline">Cancel</Button>

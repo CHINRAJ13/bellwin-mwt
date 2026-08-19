@@ -160,9 +160,10 @@ export const ADMIN_NAV = [
   {
     id: 'approval', label: 'Approval', icon: Wallet,
     children: [
-      { label: 'Pending Approvals', icon: FileText, path: '/admin/approval/pending' },
-      { label: 'Loan Application Report', icon: FileText, path: '/admin/reports/loan-requisition-report' },
-      { label: 'Loan Request Report', icon: FileText, path: '/admin/approval/loan-request-report' },
+      { label: 'Customer Profile', icon: FileText, path: '/admin/approval/pending' },
+      { label: 'Loan Application', icon: FileText, path: '/admin/reports/loan-requisition-report' },
+      { label: 'Customer Loan Request', icon: FileText, path: '/admin/approval/loan-request-report' },
+      { label: 'Expense Request', icon: FileText, path: '/admin/approval/expense' },
     ]
   },
   {

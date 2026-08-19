@@ -19,6 +19,7 @@ const expenseSchema = new mongoose.Schema({
   amount: { type: Number }, // Kept for backwards compatibility with earlier reports if needed, though expenseAmount is used now
   expenseImage: { type: String },
   expenseImagePublicId: { type: String },
+  status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
   updatedBy: { type: String }
 }, { timestamps: true });
 
