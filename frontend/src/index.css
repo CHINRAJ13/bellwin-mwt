@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-erp-dark: #f0f4f8;
+  --color-erp-card: #ffffff;
+  --color-erp-green-light: #22c55e;
+  --color-erp-green: #16a34a;
+  --color-erp-green-dark: #d1fae5;
+  --color-erp-gold-light: #fbbf24;
+  --color-erp-gold: #d97706;
+  --color-erp-gold-dark: #b45309;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-erp-dark);
+    color: var(--color-text-primary);
+    font-family: 'Jost', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Enforce sharp corners on all form elements globally */
+  input, select, textarea, button {
+    border-radius: 0px !important;
+  }
+}
+
+@media print {
+  /* Hide the filter cards globally on print */
+  .p-6.mb-6.shadow-sm.border-gray-100 {
+    display: none !important;
+  }
+}
+
+
+/* Globally hide placeholders across all input and textarea forms */
+::placeholder {
+  color: transparent !important;
+}
+
+/* Except for specific inputs like the login form and search */
+.login-input::placeholder,
+.search-input::placeholder {
+  color: #9ca3af !important;
+}
+
