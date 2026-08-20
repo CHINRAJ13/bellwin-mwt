@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import BranchSelect from '../../../components/ui/BranchSelect';
-import { FileText, Filter, Download, DollarSign, Calendar, IndianRupee, Printer } from 'lucide-react';
+import { FileText, Filter, Download, DollarSign, Calendar, IndianRupee, Printer, XCircle, Eye } from 'lucide-react';
+import logo from '../../../assets/Logo 1.png';
 import { exportTableToPDF, exportToExcel, handlePrint } from '../../../utils/exportUtils';
 import api from '../../../services/api';
 import toast from 'react-hot-toast';
@@ -13,6 +14,7 @@ import { TD, TR } from '../../../components/ui/Table';
 const LoanDisbursementReport = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedDisbursement, setSelectedDisbursement] = useState(null);
   
   const [filters, setFilters] = useState({
     branch: '',
@@ -75,7 +77,13 @@ const LoanDisbursementReport = () => {
         disbursementDate: l.loanDate ? new Date(l.loanDate).toLocaleDateString() : (l.updatedAt ? new Date(l.updatedAt).toLocaleDateString() : 'N/A'),
         paymentMode: l.disbursementMode || 'Cash', // Default to Cash if not tracked yet
         transactionNo: l.transactionRef || '-', // Transaction ref if available
-        status: l.status
+        status: l.status,
+        schemeName: l.schemeName || 'Gold Loan',
+        documentCharges: l.documentCharges || 0,
+        insuranceCharges: l.insuranceCharges || 0,
+        netDisbursement: l.loanAmount - (l.documentCharges || 0) - (l.insuranceCharges || 0),
+        employeeName: l.employeeName || 'Admin',
+        remarks: l.remarks || 'Gold loan disbursement'
       }));
 
       // De-duplicate tableData by loanNo
@@ -193,7 +201,7 @@ const LoanDisbursementReport = () => {
           <h3 className="text-lg font-semibold text-gray-800">Disbursed Loans List</h3>
         </div>
         <DataTable
-          headers={['Loan No', 'Customer Name', 'Loan Amount', 'Disbursement Date', 'Payment Mode', 'Status']}
+          headers={['Loan No', 'Customer Name', 'Loan Amount', 'Disbursement Date', 'Payment Mode', 'Status', 'Action']}
           data={data}
           loading={loading}
           renderRow={(item) => (
@@ -212,10 +220,157 @@ const LoanDisbursementReport = () => {
                   {item.status}
                 </span>
               </TD>
+              <TD>
+                <button
+                  onClick={() => setSelectedDisbursement(item)}
+                  className="flex items-center gap-1 px-3 py-1 rounded text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow-sm"
+                >
+                  <Eye size={12} />
+                  <span>View</span>
+                </button>
+              </TD>
             </TR>
           )}
         />
       </div>
+
+      {selectedDisbursement && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto py-8 animate-fade-in">
+          <style>{`
+            @media print {
+              body * {
+                visibility: hidden;
+              }
+              #printable-receipt-card, #printable-receipt-card * {
+                visibility: visible;
+              }
+              #printable-receipt-card {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 10px !important;
+              }
+              .no-print {
+                display: none !important;
+              }
+            }
+          `}</style>
+          
+          <div 
+            id="printable-receipt-card"
+            className="bg-white text-gray-900 w-full max-w-xl border border-gray-200 shadow-2xl overflow-hidden relative flex flex-col my-auto"
+          >
+            {/* Modal Close (no-print) */}
+            <button 
+              onClick={() => setSelectedDisbursement(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 transition-colors p-1 no-print cursor-pointer"
+            >
+              <XCircle size={24} />
+            </button>
+
+            {/* Header: Company Name & Logo */}
+            <div className="p-6 border-b border-gray-100 flex items-center gap-4 bg-gray-50/50">
+              <img src={logo || '/logo.png'} alt="Bellwin Logo" className="w-16 h-16 object-contain" />
+              <div>
+                <h2 className="text-2xl font-black tracking-tight text-gray-900">BELLWIN GROUP OF COMPANIES</h2>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Loan Disbursement Slip</p>
+              </div>
+            </div>
+
+            {/* Report Content */}
+            <div className="p-6 space-y-6">
+              {/* Slip Metadata */}
+              <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-4 border border-gray-100">
+                <div>
+                  <span className="text-gray-500 block font-medium">Disbursement Date</span>
+                  <span className="font-bold text-gray-800 text-sm">{selectedDisbursement.disbursementDate}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-gray-500 block font-medium">Reference No</span>
+                  <span className="font-mono font-bold text-gray-800 text-sm">{selectedDisbursement.transactionNo}</span>
+                </div>
+              </div>
+
+              {/* Fields Table */}
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-gray-200 text-gray-500 uppercase text-xs tracking-wider">
+                    <th className="pb-2 font-bold w-1/2">Field Name</th>
+                    <th className="pb-2 font-bold w-1/2 text-right">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Loan No</td>
+                    <td className="py-2.5 text-right font-bold text-gray-900">{selectedDisbursement.loanNo}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Customer</td>
+                    <td className="py-2.5 text-right font-bold text-gray-900">{selectedDisbursement.borrower}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Scheme</td>
+                    <td className="py-2.5 text-right font-semibold text-gray-900">{selectedDisbursement.schemeName}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Approved Amount</td>
+                    <td className="py-2.5 text-right font-bold text-gray-900">₹{selectedDisbursement.amount.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Processing Fee</td>
+                    <td className="py-2.5 text-right font-bold text-gray-900">₹{selectedDisbursement.documentCharges.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Insurance/Other Charges</td>
+                    <td className="py-2.5 text-right font-bold text-gray-900">₹{selectedDisbursement.insuranceCharges.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr className="bg-emerald-50/50 hover:bg-emerald-50 font-bold border-t border-b border-emerald-100">
+                    <td className="py-3 px-2 text-emerald-800">Net Disbursement</td>
+                    <td className="py-3 px-2 text-right text-emerald-800 text-base">₹{selectedDisbursement.netDisbursement.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Payment Mode</td>
+                    <td className="py-2.5 text-right font-semibold text-gray-900">{selectedDisbursement.paymentMode}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Disbursed By</td>
+                    <td className="py-2.5 text-right font-semibold text-gray-900">{selectedDisbursement.employeeName}</td>
+                  </tr>
+                  <tr className="hover:bg-gray-50/50">
+                    <td className="py-2.5 text-gray-600 font-medium">Remarks</td>
+                    <td className="py-2.5 text-right text-gray-700 italic">{selectedDisbursement.remarks}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Signatures Footer */}
+              <div className="grid grid-cols-2 gap-4 pt-10 border-t border-dashed border-gray-200">
+                <div className="text-center pt-8 border-t border-gray-300">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Customer Signature</span>
+                </div>
+                <div className="text-center pt-8 border-t border-gray-300">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Authorized Signatory</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer (no-print) */}
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 no-print">
+              <button 
+                onClick={() => setSelectedDisbursement(null)}
+                className="px-4 py-2 text-sm font-semibold bg-gray-200 hover:bg-gray-300 text-gray-800 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

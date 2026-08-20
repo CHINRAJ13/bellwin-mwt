@@ -14,6 +14,10 @@ const PersonalLoanForm = ({
   schemeSearchQuery,
   handleSchemeSelect
 }) => {
+  const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+  const employeeName = user.role === 'admin' ? 'Administrator' : (user.employee ? `${user.employee.firstName} ${user.employee.lastName}`.trim() : (user.username || 'Admin'));
+  const displayEmployeeName = selectedLoan?.employeeName || employeeName;
+
   const [formData, setFormData] = useState({
     // Additional Customer Details
     aadhaarNumber: '',
@@ -243,8 +247,8 @@ const PersonalLoanForm = ({
             <div className="flex items-center justify-end w-full max-w-sm">
               <span className="text-sm text-black font-semibold w-24">Employee</span>
               <span className="text-sm text-black mx-2">:</span>
-              <select className="w-48 px-2 py-1 text-sm border border-gray-400 bg-[#e8e4f5] font-semibold focus:outline-none">
-                <option>Admin</option>
+              <select className="w-48 px-2 py-1 text-sm border border-gray-400 bg-[#e8e4f5] font-semibold focus:outline-none" disabled>
+                <option>{displayEmployeeName}</option>
               </select>
             </div>
             <div className="flex items-center justify-end w-full max-w-sm">

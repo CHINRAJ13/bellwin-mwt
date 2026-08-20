@@ -9,6 +9,7 @@ import Select from '../../../components/ui/Select';
 import Badge from '../../../components/ui/Badge';
 import DataTable from '../../../components/ui/DataTable';
 import { TD, TR } from '../../../components/ui/Table';
+import BranchSelect from '../../../components/ui/BranchSelect';
 
 const STORAGE_KEY = 'belwin_customers';
 const BLOCK_LOG_KEY = 'belwin_block_logs';
@@ -130,15 +131,13 @@ const BorrowerBlock = () => {
             <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Find Borrower</h4>
             
             <div className="space-y-3">
-              <Select
-                value={branchFilter}
-                onChange={(e) => setBranchFilter(e.target.value)}
-              >
-                <option value="All">All Branches</option>
-                <option value="Head Office">Head Office</option>
-                <option value="Branch 01">Branch 01</option>
-                <option value="Branch 02">Branch 02</option>
-              </Select>
+              <BranchSelect
+                value={branchFilter === 'All' ? '' : branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value || 'All')}
+                showAllOption
+                allOptionLabel="All Branches"
+                label=""
+              />
 
               <div className="grid grid-cols-2 gap-2">
                 <div>

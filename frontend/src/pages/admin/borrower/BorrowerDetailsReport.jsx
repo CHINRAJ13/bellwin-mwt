@@ -10,6 +10,7 @@ import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 import DataTable from '../../../components/ui/DataTable';
 import { TD, TR } from '../../../components/ui/Table';
+import BranchSelect from '../../../components/ui/BranchSelect';
 
 const STORAGE_KEY = 'belwin_customers';
 const LOAN_STORAGE_KEY = 'belwin_loans';
@@ -188,16 +189,13 @@ const BorrowerDetailsReport = () => {
             />
           </div>
 
-          <Select
+          <BranchSelect
             label="Branch"
-            value={branchFilter}
-            onChange={(e) => setBranchFilter(e.target.value)}
-          >
-            <option value="All">All Branches</option>
-            <option value="Head Office">Head Office</option>
-            <option value="Branch 01">Branch 01</option>
-            <option value="Branch 02">Branch 02</option>
-          </Select>
+            value={branchFilter === 'All' ? '' : branchFilter}
+            onChange={(e) => setBranchFilter(e.target.value || 'All')}
+            showAllOption
+            allOptionLabel="All Branches"
+          />
 
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">From Date</label>

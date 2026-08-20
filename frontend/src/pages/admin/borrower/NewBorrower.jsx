@@ -7,7 +7,7 @@ import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import Button from '../../../components/ui/Button';
 
-const BRANCHES = ['Head Office', 'Branch 01', 'Branch 02'];
+
 
 const NewBorrower = () => {
   const [loading, setLoading] = useState(false);

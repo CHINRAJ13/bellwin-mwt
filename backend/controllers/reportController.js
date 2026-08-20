@@ -110,7 +110,14 @@ const getLoanReport = async (req, res, next) => {
       loanAmount: parseFloat(loan.loanAmount) || 0,
       remainingLoanAmount: parseFloat(loan.remainingLoanAmount) || 0,
       status: loan.status,
-      createdAt: loan.createdAt
+      createdAt: loan.createdAt,
+      schemeName: loan.schemeName || 'Gold Loan',
+      documentCharges: loan.documentCharges || loan.documentCharge || 0,
+      insuranceCharges: loan.insuranceCharges || 0,
+      disbursementMode: loan.disbursementMode || 'Cash',
+      transactionRef: loan.transactionRef || loan.loanId,
+      employeeName: loan.employeeName || 'Admin',
+      remarks: loan.remarks || 'Gold loan disbursement'
     }));
 
     res.json(formattedLoans);
