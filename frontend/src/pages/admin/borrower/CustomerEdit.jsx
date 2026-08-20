@@ -7,7 +7,7 @@ import Select from '../../../components/ui/Select';
 import api from '../../../services/api';
 import { toast } from 'react-hot-toast';
 
-const BRANCHES = ['Head Office', 'Branch 01', 'Branch 02'];
+
 
 const CustomerEdit = () => {
   const location = useLocation();
@@ -50,6 +50,19 @@ const CustomerEdit = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [aadhaarFile, setAadhaarFile] = useState(null);
   const [panFile, setPanFile] = useState(null);
+  const [branches, setBranches] = useState([]);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const res = await api.get('/master/branch');
+        setBranches(res.data.branches || res.data || []);
+      } catch (err) {
+        console.error('Failed to fetch branches in CustomerEdit:', err);
+      }
+    };
+    fetchBranches();
+  }, []);
 
   // Compute addresses
   useEffect(() => {
@@ -505,7 +518,12 @@ const CustomerEdit = () => {
                     value={formData.branch}
                     onChange={handleInputChange}
                   >
-                    {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+                    <option value="Head Office">Head Office</option>
+                    {branches.map(b => (
+                      <option key={b._id} value={b.branchName}>
+                        {b.branchName}
+                      </option>
+                    ))}
                   </Select>
 
                   <Input

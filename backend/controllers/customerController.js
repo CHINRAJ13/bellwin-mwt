@@ -151,7 +151,18 @@ const createCustomer = async (req, res, next) => {
             }
         }
 
-        // 3. Create record
+        // 3. Determine branch details
+        const branchNameValue = req.body.branchName || req.user.employeeId?.branch || '';
+        let branchIdValue = null;
+        if (branchNameValue) {
+            const Branch = require('../models/Branch');
+            const branchDoc = await Branch.findOne({ branchName: new RegExp('^' + branchNameValue.trim() + '$', 'i') });
+            if (branchDoc) {
+                branchIdValue = branchDoc._id;
+            }
+        }
+
+        // 4. Create record
         const customer = new Customer({
             customerId, // Manually set generated ID
             customerName, guardianName, dateOfBirth, age, gender,
@@ -178,8 +189,8 @@ const createCustomer = async (req, res, next) => {
             status: 'Customer Approval Pending',
             employeeId: req.user._id,
             createdBy: req.user._id,
-            branchId: req.user.branch || req.user.branchId || null,
-            branchName: req.user.branchName || '',
+            branchId: branchIdValue,
+            branchName: branchNameValue,
             // Initialize workflow tracking
             approvalStatus: 'Pending',
             workflowHistory: [{
@@ -240,10 +251,19 @@ const getCustomers = async (req, res, next) => {
         } = req.query;
 
         const query = { isDeleted: { $ne: true } };
+        let isUserAdmin = false;
+
         if (req.user) {
             const isGuest = req.user._id === '000000000000000000000000';
-            if (req.user.role !== 'admin' && !isGuest) {
-                query.createdBy = req.user._id;
+            const role = req.user.role || '';
+            isUserAdmin = role === 'admin' || role === 'super admin' || role === 'Super Admin' || isGuest;
+
+            if (!isUserAdmin) {
+                if (req.user.employeeId && req.user.employeeId.branch) {
+                    query.branchName = new RegExp('^' + req.user.employeeId.branch.trim() + '$', 'i');
+                } else {
+                    query.createdBy = req.user._id;
+                }
             }
         }
 
@@ -258,7 +278,9 @@ const getCustomers = async (req, res, next) => {
 
         if (status)           query.status = status;
         if (gender)           query.gender = gender;
-        if (branch && branch !== 'All') query.branchName = new RegExp('^' + branch.trim() + '$', 'i');
+        if (isUserAdmin && branch && branch !== 'All') {
+            query.branchName = new RegExp('^' + branch.trim() + '$', 'i');
+        }
         if (city)             query.city   = { $regex: city, $options: 'i' };
         if (startDate || endDate) {
             query.createdAt = {};
@@ -424,11 +446,22 @@ const updateCustomer = async (req, res, next) => {
             'mobileNumber','alternateNumber','aadhaarNumber','panNumber',
             'doorStreet','area','city','postalCode','district','state',
             'permanentAddress','temporaryAddress','voterId','occupation',
-            'remarks','proof2Name','proof2Number'
+            'remarks','proof2Name','proof2Number', 'branchName'
         ];
         allowed.forEach(field => {
             if (req.body[field] !== undefined) customer[field] = req.body[field];
         });
+
+        if (req.body.branchName !== undefined) {
+            customer.branchName = req.body.branchName;
+            if (req.body.branchName) {
+                const Branch = require('../models/Branch');
+                const branchDoc = await Branch.findOne({ branchName: new RegExp('^' + req.body.branchName.trim() + '$', 'i') });
+                customer.branchId = branchDoc ? branchDoc._id : null;
+            } else {
+                customer.branchId = null;
+            }
+        }
         
         if (req.body.nominee) {
             customer.nominee = {
@@ -658,8 +691,15 @@ const getPendingCustomers = async (req, res, next) => {
     try {
         const query = { approvalStatus: 'Pending', isDeleted: { $ne: true } };
         const isGuest = req.user._id === '000000000000000000000000';
-        if (req.user.role !== 'admin' && !isGuest) {
-            query.createdBy = req.user._id;
+        const role = req.user.role || '';
+        const isUserAdmin = role === 'admin' || role === 'super admin' || role === 'Super Admin' || isGuest;
+
+        if (!isUserAdmin) {
+            if (req.user.employeeId && req.user.employeeId.branch) {
+                query.branchName = new RegExp('^' + req.user.employeeId.branch.trim() + '$', 'i');
+            } else {
+                query.createdBy = req.user._id;
+            }
         }
 
         const customers = await Customer

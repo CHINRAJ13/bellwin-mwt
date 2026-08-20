@@ -15,6 +15,10 @@ const GoldLoanForm = ({
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
+  const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+  const employeeName = user.role === 'admin' ? 'Administrator' : (user.employee ? `${user.employee.firstName} ${user.employee.lastName}`.trim() : (user.username || 'Admin'));
+  const displayEmployeeName = selectedLoan?.employeeName || employeeName;
+
   // --- Web Camera State ---
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -313,6 +317,10 @@ const GoldLoanForm = ({
         loanDate: selectedLoan ? selectedLoan.loanDate : new Date(),
         jewelImage: capturedImage, // Send captured image base64
         
+        employeeId: selectedLoan?.employeeId || user.employee?.employeeId || user._id || '',
+        employeeName: selectedLoan?.employeeName || employeeName,
+        branch: selectedLoan?.branch || user.employee?.branch || user.branch || '',
+
         // Scheme Details
         schemeId: schemeData?.schemeId || '',
         schemeName: schemeData?.schemeName || '',
@@ -456,8 +464,8 @@ const GoldLoanForm = ({
             </div>
             <div className="flex items-center justify-end gap-2">
               <label className="text-sm font-bold text-black w-28 text-right">Employee :</label>
-              <select className="w-48 px-2 py-1 text-sm border border-gray-400 bg-[#e8e4f5] font-semibold focus:outline-none">
-                <option>Admin</option>
+              <select className="w-48 px-2 py-1 text-sm border border-gray-400 bg-[#e8e4f5] font-semibold focus:outline-none" disabled>
+                <option>{displayEmployeeName}</option>
               </select>
             </div>
           </div>

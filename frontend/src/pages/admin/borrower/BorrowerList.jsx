@@ -13,7 +13,13 @@ const BorrowerList = () => {
   const [borrowers, setBorrowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('');
+
+  const user = (() => { try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; } })();
+  const role = user.role || 'employee';
+  const isAdmin = role === 'admin' || role === 'super admin' || role === 'Super Admin';
+  const userBranch = user.branch || user.employee?.branch || '';
+
+  const [selectedBranch, setSelectedBranch] = useState(isAdmin ? '' : userBranch);
 
   const fetchBorrowers = async () => {
     try {
@@ -68,13 +74,15 @@ const BorrowerList = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <BranchSelect
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
-            showAllOption
-            containerClassName="w-full md:w-64"
-            label=""
-          />
+          {isAdmin && (
+            <BranchSelect
+              value={selectedBranch}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              showAllOption
+              containerClassName="w-full md:w-64"
+              label=""
+            />
+          )}
         </div>
 
         {loading ? (

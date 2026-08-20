@@ -444,7 +444,7 @@ const ExpenseReport = () => {
                           </>
                         ) : null}
                         {(exp.expenseImage || exp.billReceiptUpload) && (
-                          <a href={exp.expenseImage || `http://localhost:5000/${exp.billReceiptUpload}`} target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-800 flex items-center justify-center gap-1 text-xs font-medium" title="View Bill/Item Image">
+                          <a href={exp.expenseImage || `http://127.0.0.1:5000/${exp.billReceiptUpload}`} target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-800 flex items-center justify-center gap-1 text-xs font-medium" title="View Bill/Item Image">
                             <FileText size={14} /> Bill
                           </a>
                         )}

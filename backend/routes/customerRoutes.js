@@ -56,8 +56,8 @@ const {
 // ── Routes ─────────────────────────────────────────────────────────────────────
 router.get('/audit/blocks', protect, getBlockLogs);
 router.get('/next-id', protect, getNextCustomerId);
-router.get('/search', getCustomers);
-router.get('/filter', getCustomers);
+router.get('/search', protect, getCustomers);
+router.get('/filter', protect, getCustomers);
 router.get('/pending', protect, getPendingCustomers);
 router.put('/approve/:customerId', protect, approveCustomerByApprovalId);
 router.put('/reject/:customerId', protect, validateRejection, rejectCustomerByApprovalId);
@@ -73,7 +73,7 @@ router.post('/upload', protect, memoryMiddleware, protect, uploadCustomerDocumen
  */
 router.route('/')
     .post(protect, memoryMiddleware, protect, validateCreateCustomer, createCustomer)
-    .get(getCustomers);
+    .get(protect, getCustomers);
 
 /**
  * GET    /api/customers/:id  → Single customer
