@@ -86,6 +86,13 @@ const ExpenseReport = () => {
   };
 
   // Helper for date presets
+  const toLocalYYYYMMDD = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const applyDatePreset = (preset) => {
     setDatePreset(preset);
     const today = new Date();
@@ -95,22 +102,22 @@ const ExpenseReport = () => {
     let end = '';
 
     if (preset === 'Today') {
-      start = today.toISOString().split('T')[0];
+      start = toLocalYYYYMMDD(today);
       end = start;
     } else if (preset === 'Yesterday') {
       const yest = new Date(today);
       yest.setDate(yest.getDate() - 1);
-      start = yest.toISOString().split('T')[0];
+      start = toLocalYYYYMMDD(yest);
       end = start;
     } else if (preset === 'This Week') {
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - today.getDay());
-      start = startOfWeek.toISOString().split('T')[0];
-      end = new Date().toISOString().split('T')[0];
+      start = toLocalYYYYMMDD(startOfWeek);
+      end = toLocalYYYYMMDD(new Date());
     } else if (preset === 'This Month') {
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      start = startOfMonth.toISOString().split('T')[0];
-      end = new Date().toISOString().split('T')[0];
+      start = toLocalYYYYMMDD(startOfMonth);
+      end = toLocalYYYYMMDD(new Date());
     }
 
     setStartDate(start);
@@ -220,7 +227,7 @@ const ExpenseReport = () => {
       exp.enteredBy || '',
       exp.status || 'Pending'
     ];
-    exportTableToPDF(filteredExpenses, headers, mapper, 'Expense Report', `Expense_Report_${new Date().toISOString().split('T')[0]}`);
+    exportTableToPDF('Expense Report', headers, filteredExpenses, mapper, `Expense_Report_${new Date().toISOString().split('T')[0]}`);
   };
 
   // Print

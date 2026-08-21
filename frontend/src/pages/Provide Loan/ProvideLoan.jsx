@@ -238,7 +238,6 @@ const ProvideLoan = () => {
               <option value="gold_loan">Gold Loan</option>
               <option value="personal_loan">Personal Loan</option>
               <option value="vehicle_loan">Vehicle Loan</option>
-              <option value="micro_finance">Micro Finance</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
           </div>

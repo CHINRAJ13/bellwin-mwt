@@ -4,7 +4,14 @@ import toast from 'react-hot-toast';
 import { Search, Printer, Calendar, RefreshCw } from 'lucide-react';
 
 const DailySummaryReportView = () => {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const toLocalYYYYMMDD = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [date, setDate] = useState(toLocalYYYYMMDD(new Date()));
   const [period, setPeriod] = useState('today');
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);

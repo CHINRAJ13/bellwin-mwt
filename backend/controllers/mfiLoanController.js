@@ -15,11 +15,18 @@ exports.getAllMfiLoans = async (req, res, next) => {
         const { fromDate, toDate } = req.query;
         let query = {};
         
-        if (fromDate && toDate) {
-            query.applicationDate = {
-                $gte: new Date(fromDate),
-                $lte: new Date(toDate)
-            };
+        if (fromDate || toDate) {
+            query.applicationDate = {};
+            if (fromDate) {
+                const start = new Date(fromDate);
+                start.setUTCHours(0, 0, 0, 0);
+                query.applicationDate.$gte = start;
+            }
+            if (toDate) {
+                const end = new Date(toDate);
+                end.setUTCHours(23, 59, 59, 999);
+                query.applicationDate.$lte = end;
+            }
         }
 
         const loans = await MfiLoan.find(query).sort({ createdAt: -1 });

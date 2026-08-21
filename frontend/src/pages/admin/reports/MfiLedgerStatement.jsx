@@ -24,26 +24,34 @@ const MfiLedgerStatement = () => {
   const [ledgerData, setLedgerData] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  const toLocalYYYYMMDD = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const getDateRangeParams = () => {
     const today = new Date();
     let fromDate = null;
     let toDate = null;
 
     if (filters.dateRange === 'Today') {
-      fromDate = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-      toDate = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+      fromDate = toLocalYYYYMMDD(today);
+      toDate = fromDate;
     } else if (filters.dateRange === 'This Week') {
-      const firstDay = new Date(today.setDate(today.getDate() - today.getDay()));
-      fromDate = new Date(firstDay.setHours(0, 0, 0, 0)).toISOString();
-      toDate = new Date(new Date().setHours(23, 59, 59, 999)).toISOString();
+      const firstDay = new Date(today);
+      firstDay.setDate(today.getDate() - today.getDay());
+      fromDate = toLocalYYYYMMDD(firstDay);
+      toDate = toLocalYYYYMMDD(new Date());
     } else if (filters.dateRange === 'This Month') {
       const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      fromDate = new Date(firstDay.setHours(0, 0, 0, 0)).toISOString();
-      toDate = new Date(new Date().setHours(23, 59, 59, 999)).toISOString();
+      fromDate = toLocalYYYYMMDD(firstDay);
+      toDate = toLocalYYYYMMDD(new Date());
     } else if (filters.dateRange === 'This Year') {
       const firstDay = new Date(today.getFullYear(), 0, 1);
-      fromDate = new Date(firstDay.setHours(0, 0, 0, 0)).toISOString();
-      toDate = new Date(new Date().setHours(23, 59, 59, 999)).toISOString();
+      fromDate = toLocalYYYYMMDD(firstDay);
+      toDate = toLocalYYYYMMDD(new Date());
     }
 
     let queryStr = '';

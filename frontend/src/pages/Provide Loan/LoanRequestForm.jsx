@@ -177,7 +177,6 @@ const LoanRequestForm = () => {
                 <option value="Gold Loan">Gold Loan</option>
                 <option value="Personal Loan">Personal Loan</option>
                 <option value="Chit Fund">Chit Fund</option>
-                <option value="Micro Finance">Micro Finance</option>
                 <option value="Vehicle Loan">Vehicle Loan</option>
               </Select>
 

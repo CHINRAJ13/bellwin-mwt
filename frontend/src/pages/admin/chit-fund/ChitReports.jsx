@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import Card from '../../../components/ui/Card';
 import { FileText, Printer, Download } from 'lucide-react';
 import api from '../../../services/api';
+import toast from 'react-hot-toast';
 
 const ChitReports = () => {
     const location = useLocation();
@@ -67,8 +68,6 @@ const ChitReports = () => {
     };
 
     const handleExportCSV = () => {
-        if (!reportData || reportData.length === 0) return;
-
         // Collect headers based on table logic
         let headers = [];
         if (reportRoute === 'chit-group') {
@@ -77,35 +76,61 @@ const ChitReports = () => {
             headers = ['Contribution ID', 'Month', 'Expected Amount', 'Paid Amount', 'Balance', 'Status'];
         } else if (reportRoute === 'chit-disbursement') {
             headers = ['Payout ID', 'Customer Name', 'Gross Prize', 'Commission', 'Net Payout', 'Status'];
+        } else if (reportRoute === 'chit-collection') {
+            headers = ['Collection ID', 'Receipt No', 'Member Name', 'Group Name', 'Amount Paid', 'Payment Mode', 'Date'];
+        } else if (reportRoute === 'chit-due') {
+            headers = ['Member ID', 'Member Name', 'Group ID', 'Pending Months', 'Total Due Amount', 'Last Paid Date'];
+        } else if (reportRoute === 'chit-auction') {
+            headers = ['Auction ID', 'Group ID', 'Month', 'Winner Name', 'Winning Bid/Discount', 'Net Pool Amount', 'Date'];
+        } else if (reportRoute === 'chit-discount') {
+            headers = ['Member ID', 'Member Name', 'Group ID', 'Total Dividend Earned'];
+        } else if (reportRoute === 'chit-member') {
+            headers = ['Date', 'Description', 'Debit (₹)', 'Credit (₹)', 'Balance (₹)'];
         } else {
-            headers = Object.keys(reportData[0]);
+            headers = reportData && reportData.length > 0 && reportData[0].id !== 'No data' ? Object.keys(reportData[0]) : ['ID', 'Message'];
         }
 
-        // Map data
-        const rows = reportData.map(row => {
-            if (reportRoute === 'chit-group') {
-                return [row.groupId, row.groupName, row.chitValue, row.duration, row.totalMembers, row.status];
-            } else if (reportRoute === 'chit-contribution') {
-                return [row.contributionId, row.chitMonth, row.expectedAmount, row.paidAmount, row.balanceAmount, row.status];
-            } else if (reportRoute === 'chit-disbursement') {
-                return [row.payoutId, row.customer?.customerName || '', row.grossPrizeAmount, row.applicableCommission, row.netPayout, row.status];
-            } else {
-                return Object.values(row);
-            }
-        });
+        // Map data if available
+        const rows = (reportData && reportData.length > 0 && reportData[0].id !== 'No data')
+            ? reportData.map(row => {
+                if (reportRoute === 'chit-group') {
+                    return [row.groupId || '', row.groupName || '', row.chitValue || 0, row.duration || 0, row.totalMembers || 0, row.status || ''];
+                } else if (reportRoute === 'chit-contribution') {
+                    return [row.contributionId || '', row.chitMonth || '', row.expectedAmount || 0, row.paidAmount || 0, row.balanceAmount || 0, row.status || ''];
+                } else if (reportRoute === 'chit-disbursement') {
+                    return [row.payoutId || '', row.customer?.customerName || '', row.grossPrizeAmount || 0, row.applicableCommission || 0, row.netPayout || 0, row.status || ''];
+                } else {
+                    return Object.values(row);
+                }
+            })
+            : [];
 
         // Convert to CSV
-        const csvContent = "data:text/csv;charset=utf-8," 
-            + headers.join(",") + "\n"
-            + rows.map(e => e.join(",")).join("\n");
+        const csvString = headers.join(",") + "\n" + rows.map(e => e.map(val => {
+            // Escape values containing commas or quotes
+            if (val === null || val === undefined) return '';
+            let str = String(val);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                str = `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        }).join(",")).join("\n");
 
-        const encodedUri = encodeURI(csvContent);
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", `${title.replace(/\s+/g, '_')}_Export.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        if (rows.length === 0) {
+            toast.success('Downloaded empty template successfully!');
+        } else {
+            toast.success('Report exported successfully!');
+        }
     };
 
     const renderTableHeaders = () => {

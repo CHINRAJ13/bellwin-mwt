@@ -33,7 +33,38 @@ export const exportToPDF = (elementId, filename) => {
   window.print();
 };
 
-export const exportTableToPDF = async (title, headers, data, mapper, filename) => {
+export const exportTableToPDF = async (arg1, arg2, arg3, arg4, arg5) => {
+  let title = 'Export';
+  let headers = [];
+  let data = [];
+  let mapper = null;
+  let filename = 'export';
+
+  // Parse arguments based on type to handle parameter mismatch and optional mapper
+  if (Array.isArray(arg1)) {
+    data = arg1;
+    headers = Array.isArray(arg2) ? arg2 : [];
+    if (typeof arg3 === 'function') {
+      mapper = arg3;
+    }
+    title = typeof arg4 === 'string' ? arg4 : 'Export';
+    filename = typeof arg5 === 'string' ? arg5 : 'export';
+  } else {
+    title = typeof arg1 === 'string' ? arg1 : 'Export';
+    headers = Array.isArray(arg2) ? arg2 : [];
+    data = Array.isArray(arg3) ? arg3 : [];
+    
+    if (typeof arg4 === 'function') {
+      mapper = arg4;
+      filename = typeof arg5 === 'string' ? arg5 : 'export';
+    } else if (typeof arg4 === 'string') {
+      mapper = null;
+      filename = arg4;
+    } else {
+      filename = typeof arg5 === 'string' ? arg5 : 'export';
+    }
+  }
+
   if (!data || !data.length) return;
   
   const doc = new jsPDF();
@@ -41,7 +72,7 @@ export const exportTableToPDF = async (title, headers, data, mapper, filename) =
   
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  const companyName = "Belwin Group of Company";
+  const companyName = "BELLWIN GROUP OF COMPANIES";
   const textWidth = doc.getTextWidth(companyName);
   
   try {

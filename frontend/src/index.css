@@ -38,12 +38,57 @@
 }
 
 @media print {
-  /* Hide the filter cards globally on print */
+  /* Hide sidebars, headers, navigation, footers, buttons, and filter forms globally */
+  aside,
+  header,
+  .topbar-header,
+  .print\:hidden,
+  .no-print,
+  button,
+  .btn,
+  .header-actions,
+  .tabs-container,
+  .filter-grid,
+  form,
   .p-6.mb-6.shadow-sm.border-gray-100 {
     display: none !important;
   }
+
+  /* Ensure the printed container spans full width and has no default screen layout constraints */
+  body, 
+  main, 
+  .flex-1,
+  .max-w-screen-2xl,
+  .max-w-7xl,
+  .ledger-container,
+  .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Force display of the global printable header */
+  .print-header {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 24px !important;
+    width: 100% !important;
+  }
 }
 
+.print-header {
+  display: none !important;
+}
 
 /* Globally hide placeholders across all input and textarea forms */
 ::placeholder {

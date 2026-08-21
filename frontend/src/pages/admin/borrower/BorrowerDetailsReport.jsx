@@ -92,10 +92,10 @@ const BorrowerDetailsReport = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Center: Belwin Group of Company
+    // Center: BELLWIN GROUP OF COMPANIES
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Belwin Group of Company", pageWidth / 2, 15, { align: 'center' });
+    doc.text("BELLWIN GROUP OF COMPANIES", pageWidth / 2, 15, { align: 'center' });
     
     // Center: Report Title
     doc.setFontSize(12);
@@ -167,7 +167,7 @@ const BorrowerDetailsReport = () => {
 
       {/* Print header only shown during printing */}
       <div className="hidden print:block mb-8 text-center border-b border-gray-200 pb-4">
-        <h2 className="text-2xl font-bold text-green-800">Belwin Groups Jewellery ERP</h2>
+        <h2 className="text-2xl font-bold text-green-800">BELLWIN GROUP OF COMPANIES</h2>
         <h3 className="text-lg font-bold text-gray-700">Borrower Accounts Ledger Report</h3>
         <p className="text-xs text-gray-500 mt-1">Generated date: {new Date().toLocaleDateString()}</p>
       </div>
