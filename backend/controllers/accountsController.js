@@ -17,8 +17,16 @@ const getUnifiedTransactions = async (filters = {}) => {
   
   const dateFilter = {};
   if (fromDate || toDate) {
-    if (fromDate) dateFilter.$gte = new Date(fromDate);
-    if (toDate) dateFilter.$lte = new Date(toDate);
+    if (fromDate) {
+      const start = new Date(fromDate);
+      start.setUTCHours(0, 0, 0, 0);
+      dateFilter.$gte = start;
+    }
+    if (toDate) {
+      const end = new Date(toDate);
+      end.setUTCHours(23, 59, 59, 999);
+      dateFilter.$lte = end;
+    }
   }
 
   const queryPayment = Object.keys(dateFilter).length > 0 ? { voucherDate: dateFilter } : {};
@@ -357,8 +365,16 @@ exports.getJournalReport = async (req, res, next) => {
     let query = {};
     if (req.query.fromDate || req.query.toDate) {
       query.date = {};
-      if (req.query.fromDate) query.date.$gte = new Date(req.query.fromDate);
-      if (req.query.toDate) query.date.$lte = new Date(req.query.toDate);
+      if (req.query.fromDate) {
+        const start = new Date(req.query.fromDate);
+        start.setUTCHours(0, 0, 0, 0);
+        query.date.$gte = start;
+      }
+      if (req.query.toDate) {
+        const end = new Date(req.query.toDate);
+        end.setUTCHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
     }
     
     const journals = await JournalVoucher.find(query).sort({ date: -1 }).lean();

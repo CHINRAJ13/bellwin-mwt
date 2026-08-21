@@ -55,10 +55,11 @@ const AppLayout = () => {
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 flex flex-col justify-between">
           {/* Print Only Header */}
-          <div className="hidden print:flex flex-col items-center justify-center mb-6 border-b-2 border-gray-800 pb-4">
-            <div className="flex items-center gap-4">
-              <img src={logo} alt="Belwin Jewels" className="w-16 h-16 object-contain" />
-              <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight">Belwin Group of Company</h1>
+          <div className="print-header">
+            <img src={logo} alt="Belwin Jewels" className="w-16 h-16 object-contain" />
+            <div className="flex flex-col text-center md:text-left">
+              <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">BELLWIN GROUP OF COMPANIES</h1>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Official System Report</p>
             </div>
           </div>
 

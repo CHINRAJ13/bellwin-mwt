@@ -560,10 +560,10 @@ const GoldLoanForm = ({
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-2 mt-8">
-            <button disabled={loading} onClick={() => handleSave(false, false)} className="bg-[#8b0000] text-white px-6 py-2 text-sm font-bold rounded-sm disabled:opacity-50">Save</button>
-            <button disabled={loading} className="bg-[#8b0000] text-white px-6 py-2 text-sm font-bold rounded-sm disabled:opacity-50">Cancel</button>
-            <button disabled={loading} onClick={() => handleSave(true, false)} className="bg-[#8b0000] text-white px-6 py-2 text-sm font-bold rounded-sm disabled:opacity-50">Save & Close</button>
-            <button disabled={loading} onClick={() => handleSave(true, true)} className="bg-[#8b0000] text-white px-6 py-2 text-sm font-bold rounded-sm disabled:opacity-50">Close & Repledge</button>
+            <button disabled={loading} onClick={() => handleSave(false, false)} className="bg-[#8b0000] text-white px-6 py-2 text-sm font-bold rounded-sm disabled:opacity-50">
+              {selectedLoan ? 'Save & Update' : 'Save'}
+            </button>
+            <button disabled={loading} onClick={() => navigate(-1)} className="bg-[#8b0000] text-white px-6 py-2 text-sm font-bold rounded-sm disabled:opacity-50">Cancel</button>
         </div>
       </div>
       {/* Web Camera Modal */}

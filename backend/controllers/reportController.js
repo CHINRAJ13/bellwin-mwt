@@ -1409,8 +1409,16 @@ const getBorrowerDetailsReport = async (req, res, next) => {
     
     if (startDate || endDate) {
       query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setUTCHours(0, 0, 0, 0);
+        query.createdAt.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setUTCHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
     }
 
     const customers = await Customer.find(query).lean();
@@ -1456,8 +1464,16 @@ const getLoanLedger = async (req, res, next) => {
     if (schemeType) loanQuery.schemeType = { $regex: new RegExp(schemeType, 'i') };
     if (fromDate || toDate) {
       loanQuery.loanDate = {};
-      if (fromDate) loanQuery.loanDate.$gte = new Date(fromDate);
-      if (toDate) loanQuery.loanDate.$lte = new Date(toDate);
+      if (fromDate) {
+        const start = new Date(fromDate);
+        start.setUTCHours(0, 0, 0, 0);
+        loanQuery.loanDate.$gte = start;
+      }
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setUTCHours(23, 59, 59, 999);
+        loanQuery.loanDate.$lte = end;
+      }
     }
 
     const loans = await Loan.find(loanQuery);

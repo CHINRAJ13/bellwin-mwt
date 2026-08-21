@@ -47,6 +47,7 @@ const NewBorrower = () => {
   };
 
   const [formData, setFormData] = useState(initialForm);
+  const [sameAddress, setSameAddress] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [aadhaarFile, setAadhaarFile] = useState(null);
   const [panFile, setPanFile] = useState(null);
@@ -65,15 +66,25 @@ const NewBorrower = () => {
     fetchNextId();
   }, []);
 
+  const sameAddressRef = useRef(sameAddress);
+  useEffect(() => {
+    sameAddressRef.current = sameAddress;
+  }, [sameAddress]);
+
   // Compute addresses
   useEffect(() => {
     const parts = [formData.doorNo, formData.area, formData.city, formData.postalCode].filter(p => p && p.trim() !== '');
     const newAddress = parts.join(', ');
-    setFormData(prev => ({
-      ...prev,
-      permanentAddress: newAddress,
-      temporaryAddress: newAddress
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        temporaryAddress: newAddress
+      };
+      if (sameAddressRef.current) {
+        updated.permanentAddress = newAddress;
+      }
+      return updated;
+    });
   }, [formData.doorNo, formData.area, formData.city, formData.postalCode]);
 
   // Age calculation from DOB
@@ -99,7 +110,15 @@ const NewBorrower = () => {
       if (value !== '' && !/^[0-9]+$/.test(value)) return;
       if (value.length > 6) return;
     }
-    setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value.toUpperCase() };
+      if (name === 'temporaryAddress' || name === 'permanentAddress') {
+        if (updated.temporaryAddress !== updated.permanentAddress) {
+          setSameAddress(false);
+        }
+      }
+      return updated;
+    });
   };
 
   const handlePhotoUpload = (e) => {
@@ -116,6 +135,7 @@ const NewBorrower = () => {
 
   const handleClear = () => {
     setFormData({ ...initialForm });
+    setSameAddress(false);
     setPhotoFile(null);
     setAadhaarFile(null);
     setPanFile(null);
@@ -376,18 +396,45 @@ const NewBorrower = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Permanent Address (Auto)"
-                    disabled
-                    value={formData.permanentAddress}
-                    className="bg-gray-50"
-                  />
-                  <Input
                     label="Temporary Address"
                     name="temporaryAddress"
                     value={formData.temporaryAddress}
                     onChange={handleInputChange}
                     placeholder="ENTER TEMPORARY ADDRESS"
+                    className="bg-white text-gray-800"
                   />
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                        Permanent Address
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-green-700 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={sameAddress}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setSameAddress(checked);
+                            if (checked) {
+                              setFormData(prev => ({
+                                ...prev,
+                                permanentAddress: prev.temporaryAddress
+                              }));
+                            }
+                          }}
+                          className="w-3.5 h-3.5 border-gray-300 text-green-600 focus:ring-green-500 rounded-none cursor-pointer"
+                        />
+                        Same as Temporary Address
+                      </label>
+                    </div>
+                    <Input
+                      name="permanentAddress"
+                      value={formData.permanentAddress}
+                      onChange={handleInputChange}
+                      placeholder="ENTER PERMANENT ADDRESS"
+                      className="bg-white text-gray-800"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -81,7 +81,7 @@ const LoanClosure = () => {
             <div className="text-center border-b-2 border-gray-800 pb-6 mb-8 flex flex-col items-center">
               <div className="flex items-center justify-center gap-4 mb-4">
                 <img src={logo} alt="Belwin Jewels Logo" className="w-16 h-16 object-contain" />
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Belwin Group of Company</h1>
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">BELLWIN GROUP OF COMPANIES</h1>
               </div>
               <h3 className="text-lg font-bold text-gray-600">Loan Closure Confirmation</h3>
               <p className="text-sm text-gray-500 mt-2">Date: {new Date().toLocaleDateString()}</p>
