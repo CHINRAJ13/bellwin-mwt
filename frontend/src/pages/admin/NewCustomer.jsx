@@ -16,23 +16,42 @@ const NewCustomer = () => {
   const [files, setFiles] = useState({ photo: null, aadharFile: null, proof2File: null });
   const [isSameAddress, setIsSameAddress] = useState(false);
 
+  const isSameAddressRef = useRef(isSameAddress);
+  useEffect(() => {
+    isSameAddressRef.current = isSameAddress;
+  }, [isSameAddress]);
+
   useEffect(() => {
     const parts = [formData.doorNo, formData.area, formData.city].filter(p => p && p.trim() !== '');
-    if (parts.length > 0) {
-      const newAddress = parts.join(', ');
-      setFormData(prev => ({
+    const newAddress = parts.join(', ');
+    setFormData(prev => {
+      const updated = {
         ...prev,
-        permanentAddress: newAddress,
-        ...(isSameAddress ? { temporaryAddress: newAddress } : {})
-      }));
-    }
-  }, [formData.doorNo, formData.area, formData.city, isSameAddress]);
+        temporaryAddress: newAddress
+      };
+      if (isSameAddressRef.current) {
+        updated.permanentAddress = newAddress;
+      }
+      return updated;
+    });
+  }, [formData.doorNo, formData.area, formData.city]);
 
   const photoInputRef = useRef(null);
   const aadharInputRef = useRef(null);
   const proof2InputRef = useRef(null);
 
-  const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'temporaryAddress' || name === 'permanentAddress') {
+        if (updated.temporaryAddress !== updated.permanentAddress) {
+          setIsSameAddress(false);
+        }
+      }
+      return updated;
+    });
+  };
   const handleFileChange = (e, fileType) => e.target.files?.[0] && setFiles(prev => ({ ...prev, [fileType]: e.target.files[0] }));
 
   const handleSubmit = (e) => {
@@ -111,30 +130,30 @@ const NewCustomer = () => {
 
             {/* ── Row 4 ── */}
             <div className="lg:col-span-2">
-              <label className={lbl}>Permanent Address <span className="text-red-500">*</span></label>
-              <textarea name="permanentAddress" value={formData.permanentAddress} onChange={handleInputChange} rows="2" className={`${inp} resize-none`} required />
+              <label className={lbl}>Temporary Address <span className="text-red-500">*</span></label>
+              <textarea name="temporaryAddress" value={formData.temporaryAddress} onChange={handleInputChange} rows="2" className={`${inp} resize-none bg-white text-gray-900`} required />
             </div>
             <div className="lg:col-span-2">
               <div className="flex justify-between items-center mb-1.5">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">Temporary Address <span className="text-red-500">*</span></label>
-                <div className="flex items-center gap-1.5 cursor-pointer">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">Permanent Address <span className="text-red-500">*</span></label>
+                <div className="flex items-center gap-1.5 cursor-pointer select-none">
                   <input 
                     type="checkbox" 
-                    id="sameAsPermanent" 
+                    id="sameAsTemporary" 
                     className="cursor-pointer accent-green-600 w-3.5 h-3.5"
                     checked={isSameAddress}
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setIsSameAddress(checked);
                       if (checked) {
-                        setFormData(prev => ({ ...prev, temporaryAddress: prev.permanentAddress }));
+                        setFormData(prev => ({ ...prev, permanentAddress: prev.temporaryAddress }));
                       }
                     }} 
                   />
-                  <label htmlFor="sameAsPermanent" className="text-[11px] font-bold text-gray-500 cursor-pointer uppercase tracking-wider">Same as Permanent</label>
+                  <label htmlFor="sameAsTemporary" className="text-[11px] font-bold text-green-700 cursor-pointer uppercase tracking-wider">Same as Temporary</label>
                 </div>
               </div>
-              <textarea name="temporaryAddress" value={formData.temporaryAddress} onChange={handleInputChange} rows="2" className={`${inp} resize-none`} required />
+              <textarea name="permanentAddress" value={formData.permanentAddress} onChange={handleInputChange} rows="2" className={`${inp} resize-none bg-white text-gray-900`} required />
             </div>
 
             {/* ── Row 5 ── */}
