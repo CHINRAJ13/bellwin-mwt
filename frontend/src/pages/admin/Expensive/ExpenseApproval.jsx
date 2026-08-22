@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Search, FileText, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import api from '../../../services/api';
+import api, { getAssetUrl } from '../../../services/api';
 
 const ExpenseApproval = () => {
   const [expenses, setExpenses] = useState([]);
@@ -159,7 +159,7 @@ const ExpenseApproval = () => {
                         )}
                         {(exp.expenseImage || exp.billReceiptUpload) && (
                           <a
-                            href={exp.expenseImage || `http://127.0.0.1:5000/${exp.billReceiptUpload}`}
+                            href={exp.expenseImage || getAssetUrl(exp.billReceiptUpload)}
                             target="_blank"
                             rel="noreferrer"
                             className="text-blue-600 hover:text-blue-800 flex items-center justify-center gap-1 text-xs font-medium border border-blue-200 rounded px-2 py-1 hover:bg-blue-50"

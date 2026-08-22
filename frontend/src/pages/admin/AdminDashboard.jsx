@@ -111,6 +111,7 @@ const KpiCard = ({ label, value, sub, trend, up, icon: Icon, iconBg, sparkData, 
       </div>
       <div className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight leading-none">{value}</div>
       <div className="text-sm text-gray-500 mt-1 mb-2">{label}</div>
+      {sub && <div className="text-[11px] text-gray-400 font-semibold truncate" title={sub}>{sub}</div>}
     </div>
     {sparkData && (
       <div className="mt-auto">
@@ -187,7 +188,7 @@ const AdminDashboard = () => {
     { label: "Today's Collection", value: dashboardData ? `₹${dashboardData.kpis.todaysCollectionAmount.toLocaleString()}` : '...', sub: 'Cash received today', trend: '+5%', up: true, icon: Wallet, iconBg: 'bg-white/60', sparkColor: 'text-green-600', bgGradient: 'bg-gradient-to-br from-green-100 to-emerald-200', sparkData: [300, 280, 350, 320, 400, 380, 450], path: '/admin/reports/cash-book-statement' },
     { label: 'Total Employees', value: dashboardData?.kpis?.totalEmployees?.toLocaleString() || '...', sub: 'Active staff members', trend: '+2%', up: true, icon: UserCheck, iconBg: 'bg-white/60', sparkColor: 'text-blue-600', bgGradient: 'bg-gradient-to-br from-blue-100 to-sky-200', sparkData: [110, 112, 115, 118, 120, 122, 124], path: '/admin/employees' },
     { label: 'Total Outstanding', value: dashboardData ? `₹${dashboardData.kpis.totalOutstandingLoan?.toLocaleString('en-IN')}` : '...', sub: 'Overall remaining balance', trend: '+4%', up: true, icon: TrendingUp, iconBg: 'bg-white/60', sparkColor: 'text-amber-600', bgGradient: 'bg-gradient-to-br from-amber-100 to-orange-200', sparkData: [85, 88, 84, 92, 96, 98, 102], path: '/admin/reports/loan-outstanding-report' },
-    { label: 'Active Schemes', value: dashboardData?.kpis?.activeSchemes?.toLocaleString() || '...', sub: 'Ongoing scheme members', trend: '+15%', up: true, icon: BookOpen, iconBg: 'bg-white/60', sparkColor: 'text-fuchsia-600', bgGradient: 'bg-gradient-to-br from-fuchsia-100 to-pink-200', sparkData: [900, 950, 980, 1000, 1050, 1100, 1150], path: '/admin/chitty/scheme' },
+    { label: 'Active Schemes', value: dashboardData?.kpis?.activeSchemes?.toLocaleString() || '...', sub: dashboardData?.kpis?.activeSchemesList?.length > 0 ? dashboardData.kpis.activeSchemesList.join(', ') : 'Registered schemes', trend: '+15%', up: true, icon: BookOpen, iconBg: 'bg-white/60', sparkColor: 'text-fuchsia-600', bgGradient: 'bg-gradient-to-br from-fuchsia-100 to-pink-200', sparkData: [900, 950, 980, 1000, 1050, 1100, 1150], path: '/admin/loan-config/scheme' },
   ];
 
   const chartData = dashboardData?.chartData || { Week: [], Today: [], Month: [], Year: [] };
