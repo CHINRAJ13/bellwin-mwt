@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Filter, Calendar as CalendarIcon, Printer, Search, Download, IndianRupee, Eye, Trash2, Edit, FileText, Plus } from 'lucide-react';
 import { exportToExcel, exportTableToPDF } from '../../../utils/exportUtils';
-import api from '../../../services/api';
+import api, { getAssetUrl } from '../../../services/api';
 
 const ExpenseReport = () => {
   const [expenses, setExpenses] = useState([]);
@@ -451,7 +451,7 @@ const ExpenseReport = () => {
                           </>
                         ) : null}
                         {(exp.expenseImage || exp.billReceiptUpload) && (
-                          <a href={exp.expenseImage || `http://127.0.0.1:5000/${exp.billReceiptUpload}`} target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-800 flex items-center justify-center gap-1 text-xs font-medium" title="View Bill/Item Image">
+                          <a href={exp.expenseImage || getAssetUrl(exp.billReceiptUpload)} target="_blank" rel="noreferrer" className="text-green-600 hover:text-green-800 flex items-center justify-center gap-1 text-xs font-medium" title="View Bill/Item Image">
                             <FileText size={14} /> Bill
                           </a>
                         )}

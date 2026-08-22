@@ -114,10 +114,16 @@ loanSchema.statics.getNextIdPreview = async function () {
 };
 
 // ── Pre-save: ensure loanId exists ───────────────────────────────────────
-loanSchema.pre('save', async function () {
-  if (this.isNew && !this.loanId) {
+loanSchema.pre('save', async function (next) {
+  if (this.isNew) {
+    if (!this.loanId) {
       this.loanId = await this.constructor.getNextId();
+    }
+    if (this.remainingLoanAmount === undefined || this.remainingLoanAmount === null || this.remainingLoanAmount === 0) {
+      this.remainingLoanAmount = this.loanAmount;
+    }
   }
+  if (typeof next === 'function') next();
 });
 
 module.exports = mongoose.model('Loan', loanSchema);
